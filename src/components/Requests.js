@@ -11,7 +11,7 @@ export const postRequestHandler = async (path, data) => {
             result = response
         })
         .catch(error => {
-            console.log(error);
+            console.log(error.response);
             result = error.response
         });
     return result
@@ -27,7 +27,7 @@ export const getRequestHandler = async (path) => {
             result = response
         })
         .catch(error => {
-            console.log(error);
+            console.log(error.response);
             result = error.response
         });
     return(result);
