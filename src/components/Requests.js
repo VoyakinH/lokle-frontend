@@ -3,7 +3,7 @@ import axios from "axios";
 export const postRequestHandler = async (path, data) => {
     let result;
     await axios.post(
-        `http://kit.lokle.ru${path}`,
+        `https://kit.lokle.ru${path}`,
         JSON.stringify(data),
         { withCredentials: true }
     )
@@ -19,7 +19,7 @@ export const postRequestHandler = async (path, data) => {
 export const getRequestHandler = async (path) => {
     let result;
     await axios.get(
-        `http://kit.lokle.ru${path}`,
+        `https://kit.lokle.ru${path}`,
         { withCredentials: true }
     )
         .then(response => {
@@ -34,7 +34,7 @@ export const getRequestHandler = async (path) => {
 export const deleteRequestHandler = async (path) => {
     let result;
     await axios.delete(
-        `http://kit.lokle.ru${path}`,
+        `https://kit.lokle.ru${path}`,
         { withCredentials: true }
     )
         .then(response => {
