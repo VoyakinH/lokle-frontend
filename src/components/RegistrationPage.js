@@ -1,21 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Grid, Paper, TextField, Button, Typography, InputAdornment,
-    IconButton, Input, InputLabel, FormControl, FormHelperText,
-    Snackbar, Alert } from '@mui/material'
-import { useNavigate } from 'react-router-dom';
-import { postRequestHandler } from "./Requests";
+    IconButton, Input, InputLabel, FormControl, FormHelperText} from '@mui/material'
 import { LockOutlined, Visibility, VisibilityOff } from "@mui/icons-material";
 import { PulseLoader } from "react-spinners";
+import { useNavigate } from 'react-router-dom';
 
-const RegistrationPage = () => {
+import { postRequestHandler } from "./Requests";
+
+const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
     let navigate = useNavigate();
-
-    const [openAlert, setOpenAlert] = React.useState(false);
-    const [alertType, setAlertType] = React.useState("info");
-    const [alertMessage, setAlertMessage] = React.useState("");
-    const onCloseAlertClick = () => {
-        setOpenAlert(false);
-    };
 
     const [firstName, setFirstName] = useState("");
     const [firstNameValidated, setFirstNameValidated] = useState(true);
@@ -201,6 +194,7 @@ const RegistrationPage = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const onRegistrationClick = () => {
+        setRegistrationDisabled(true);
         setIsLoading(true);
         postRequestHandler('/api/v1/user/parent',
             {first_name: firstName,
@@ -231,7 +225,8 @@ const RegistrationPage = () => {
                     setAlertMessage("Сервис временно недоступен. Попробуйте позднее.");
                     setOpenAlert(true);
             }
-            setIsLoading(false)
+            setIsLoading(false);
+            setRegistrationDisabled(false);
         })
     }
 
@@ -399,16 +394,6 @@ const RegistrationPage = () => {
             >
                 Вход
             </Button>
-            <Snackbar
-                open={openAlert}
-                autoHideDuration={6000}
-                onClose={onCloseAlertClick}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            >
-                <Alert onClose={onCloseAlertClick} severity={alertType} sx={{ width: '100%' }}>
-                    {alertMessage}
-                </Alert>
-            </Snackbar>
         </Paper>
     )
 };

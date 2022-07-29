@@ -1,5 +1,3 @@
-
-
 const UserDefault = {
     role:"",
     email:"",
@@ -10,5 +8,10 @@ const UserDefault = {
     phone: ""
 }
 
+const ParentDefault = {
+    "passport": "",
+    "passport_verified": true,
+}
 
-export { UserDefault }
+
+export { UserDefault, ParentDefault }

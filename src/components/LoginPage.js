@@ -1,22 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Grid,
-    Paper,
-    TextField,
-    Button,
-    Typography,
-    InputLabel,
-    Input,
-    InputAdornment,
-    IconButton,
-    FormHelperText, FormControl, Alert, Snackbar
-} from '@mui/material'
-import {LockOutlined, Visibility, VisibilityOff, Close} from '@mui/icons-material';
+import { Grid, Paper, TextField, Button, Typography, InputLabel, Input,
+    InputAdornment, IconButton, FormHelperText, FormControl, Snackbar, Alert } from '@mui/material'
+import { LockOutlined, Visibility, VisibilityOff } from '@mui/icons-material';
+import { PulseLoader } from "react-spinners";
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {getRequestHandler, postRequestHandler} from "./Requests";
-import {PulseLoader} from "react-spinners";
 
-const LoginPage = () => {
+import { getRequestHandler, postRequestHandler } from "./Requests";
+
+
+const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => {
     let navigate = useNavigate();
 
     const [searchParams, _] = useSearchParams();
@@ -51,7 +43,6 @@ const LoginPage = () => {
 
     }, [])
 
-    // Auth credentials
     const [email, setEmail] = useState("");
     const [emailValidated, setEmailValidated] = useState(true);
     const [emailHelpText, setEmailHelpText] = useState(" ");
@@ -99,23 +90,25 @@ const LoginPage = () => {
 
     const [isLoading, setIsLoading] = useState(false);
 
-    const [openAlert, setOpenAlert] = React.useState(false);
-    const [alertType, setAlertType] = React.useState('info');
-    const [alertMessage, setAlertMessage] = React.useState("");
-    const onCloseAlertClick = () => {
-        setOpenAlert(false);
+    const [openAlertLoginPage, setOpenAlertLoginPage] = React.useState(false);
+    const [alertTypeLoginPage, setAlertTypeLoginPage] = React.useState('info');
+    const [alertMessageLoginPage, setAlertMessageLoginPage] = React.useState("");
+    const onCloseAlertLoginPageClick = () => {
+        setOpenAlertLoginPage(false);
     };
 
     const onLoginClick = e => {
         e.preventDefault();
         setIsLoading(true);
+        setLoginDisabled(true);
         postRequestHandler('/api/v1/user/auth',
             {email: email,
                 password: password})
             .then(response => {
                 switch (response.status) {
                     case 200:
-                        navigate("/lk", { replace: true })
+                        setUser(response.data);
+                        navigate("/lk", { replace: true });
                         break;
                     case 400:
                         setAlertType('error');
@@ -129,9 +122,9 @@ const LoginPage = () => {
                         setOpenAlert(true);
                         break;
                     case 401:
-                        setAlertType('info');
-                        setAlertMessage("Для входа в аккаунт подтвердите почту.");
-                        setOpenAlert(true);
+                        setAlertTypeLoginPage('info');
+                        setAlertMessageLoginPage("Для входа в аккаунт подтвердите почту.");
+                        setOpenAlertLoginPage(true);
                         break;
                     default:
                         setAlertType('error');
@@ -139,6 +132,7 @@ const LoginPage = () => {
                         setOpenAlert(true);
                 }
                 setIsLoading(false);
+                setLoginDisabled(false);
             })
     };
 
@@ -155,7 +149,7 @@ const LoginPage = () => {
 
     const onSendEmailClick = e => {
         e.preventDefault();
-        setOpenAlert(false);
+        setOpenAlertLoginPage(false);
         postRequestHandler('/api/v1/user/email',
             {email: email,
                 password: password})
@@ -297,33 +291,25 @@ const LoginPage = () => {
                 Регистрация
             </Button>
             <Snackbar
-                open={openAlert}
+                open={openAlertLoginPage}
                 autoHideDuration={6000}
-                onClose={onCloseAlertClick}
+                onClose={onCloseAlertLoginPageClick}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
                 <Alert
-                    onClose={onCloseAlertClick}
-                    severity={alertType}
+                    onClose={onCloseAlertLoginPageClick}
+                    severity={alertTypeLoginPage}
                     action={
-                        alertType === 'info'?
                             <Button
                                 variant='outlined'
                                 size="small"
                                 onClick={onSendEmailClick}
                             >
                                 Отправить повторно
-                            </Button>:
-                            <IconButton
-                                size="small"
-                                color="inherit"
-                                onClick={onCloseAlertClick}
-                            >
-                                <Close fontSize="small" />
-                            </IconButton>
+                            </Button>
                     }
                 >
-                    {alertMessage}
+                    {alertMessageLoginPage}
                 </Alert>
             </Snackbar>
         </Paper>
