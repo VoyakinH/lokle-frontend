@@ -1,12 +1,24 @@
 import React, {useEffect, useState} from "react";
-import { Button, Paper, Tab, AppBar, Toolbar, Typography } from '@mui/material';
+import {
+    Button,
+    Paper,
+    Tab,
+    AppBar,
+    Toolbar,
+    Typography,
+    DialogTitle,
+    DialogContent,
+    TextField,
+    FormControl, InputLabel, Input, InputAdornment, IconButton, FormHelperText, DialogActions, Dialog
+} from '@mui/material';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Box } from '@mui/material';
-import { Logout, AccountCircle } from '@mui/icons-material';
+import {Logout, AccountCircle, VisibilityOff, Visibility} from '@mui/icons-material';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { useNavigate } from "react-router-dom";
 import {deleteRequestHandler, getRequestHandler} from "./Requests";
 import { UserDefault, ParentDefault } from "./Structs_default";
 import { blue, yellow } from '@mui/material/colors';
+import {PulseLoader} from "react-spinners";
 
 const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }) => {
     let navigate = useNavigate();
@@ -15,6 +27,10 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
     const [parentPassportRequest, setParentPassportRequest] = useState(null);
     const [children, setChildren] = useState(null);
     const [childrenUpdateCounter, setChildrenUpdateCounter] = useState(0);
+
+    const [isDialogSendLoading, setIsDialogSendLoading] = useState(false);
+    const [openDialog, setOpenDialog] = useState(false);
+    const [dialogTitle, setDialogTitle] = useState("");
 
     useEffect(() => {
         getRequestHandler('/api/v1/user/parent').then(response => {
@@ -95,19 +111,30 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
         return <Chip sx={{color: blue[50]}} label={fio} />
     };
 
-    const onAddParentPassportClick = () => {
-        deleteRequestHandler('/api/v1/user/auth').then(response => {
-            switch (response.status) {
-                case 200:
-                    setUser(UserDefault);
-                    navigate("/login", { replace: true });
-                    break;
-                default:
-                    setAlertType('error');
-                    setAlertMessage("Сервис временно недоступен. Попробуйте позднее.");
-                    setOpenAlert(true);
-            }
-        })
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+    }
+
+    const [parentPassport, setParentPassport] = useState("");
+    const [parentPassportValidated, setParentPassportValidated] = useState(true);
+    const [parentPassportHelpText, setParentPassportHelpText] = useState(" ");
+
+    const handleParentPassportChanged = (e) => {
+        const val = e.target.value;
+        const val_nums = val.replace(/\D/g,"");
+        setParentPassport(val);
+        setParentPassportValidated(false);
+        if (val.length !== 10 || val_nums.length !== 10) {
+            setParentPassportHelpText("Неверный формат. Пример: 4253847635");
+        } else {
+            setParentPassportValidated(true);
+            setParentPassportHelpText(" ");
+        }
+    };
+
+    const openAddParentPassportDialog = () => {
+        setDialogTitle("Добавление паспорта родителя");
+        setOpenDialog(true);
     };
 
     const ParentPassportSection = () => {
@@ -121,7 +148,7 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
                     <Button
                         size={"small"}
                         variant={"outlined"}
-                        onClick={onAddParentPassportClick}
+                        onClick={openAddParentPassportDialog}
                     >
                         Подтвердить паспортные данные
                     </Button>
@@ -170,6 +197,19 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
         },
     }
 
+    const ParentPassportDialogContent = (
+        <TextField
+            style={styles.textFieldStyle}
+            variant="standard"
+            label="Серия и номер паспорта"
+            fullWidth
+            required
+            onChange={handleParentPassportChanged}
+            error={!parentPassportValidated}
+            helperText={parentPassportHelpText}
+        />
+    )
+
     return (
         <Box>
             <AppBar>
@@ -189,6 +229,24 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
             </AppBar>
             <Toolbar/>
             <ParentPassportSection/>
+            <Dialog maxWidth={'xs'} open={openDialog} onClose={handleCloseDialog}>
+                <DialogTitle>{dialogTitle}</DialogTitle>
+                <DialogContent >
+                    {dialogTitle === "Добавление паспорта родителя"? ParentPassportDialogContent: <div></div>}
+                </DialogContent>
+                <DialogActions>
+                    {/*<Button*/}
+                    {/*    onClick={onManagerRegistrationClick}*/}
+                    {/*    color={'success'}*/}
+                    {/*    disabled={managerRegistrationDisabled}*/}
+                    {/*>*/}
+                    {/*    {isDialogSendLoading?*/}
+                    {/*        <div> <PulseLoader speedMultiplier={2} color={blue[500]} size={7} /></div>:*/}
+                    {/*        "Отправить"}*/}
+                    {/*</Button>*/}
+                    <Button color={'error'} onClick={handleCloseDialog}>Отмена</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };
