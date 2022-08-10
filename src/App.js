@@ -15,18 +15,26 @@ import { GlobalLoader } from "./components/LoadingSpinners";
 import { UserDefault } from "./components/Structs_default";
 
 function App() {
+    // Информация о пользователе
     const [user, setUser] = useState(UserDefault);
+    // Флаг получения информации о пользователе по куке
     const [isLoading, setIsLoading] = useState(true);
+    // Бекенд упал :(
     const [isBackendFail, setIsBackendFail] = useState(false);
 
+    // Открыто ли уведомление
     const [openAlert, setOpenAlert] = React.useState(false);
+    // Тип уведомления
     const [alertType, setAlertType] = React.useState('info');
+    // Текст уведомления
     const [alertMessage, setAlertMessage] = React.useState("");
 
+    // Обработчик закрытия уведомления
     const onCloseAlertClick = () => {
         setOpenAlert(false);
     };
 
+    // Получение информации о пользователе по куке при заходе на сайт
     useEffect(() => {
         setIsLoading(true);
         setIsBackendFail(false);
@@ -43,7 +51,7 @@ function App() {
                 default:
                     setIsBackendFail(true);
             }
-            setIsLoading(false)
+            setIsLoading(false);
         });
     }, []);
 
@@ -65,6 +73,7 @@ function App() {
                                     />
                                 </UnauthorizedRoute>
                             }/>
+
                             <Route path="/registration" element={
                                 <UnauthorizedRoute email={user.email}>
                                     <RegistrationPage
@@ -74,6 +83,7 @@ function App() {
                                     />
                                 </UnauthorizedRoute>
                             }/>
+
                             <Route path="/lk" element={
                                 <AuthorizedRoute email={user.email}>
                                     <LkRoute
@@ -85,7 +95,7 @@ function App() {
                                     />
                                 </AuthorizedRoute>
                             } />
-                            <Route path="*" element={<Navigate to="/lk" />} />
+                            {/*<Route path="*" element={<Navigate to="/lk" />} />*/}
                         </Routes>
                     </BrowserRouter>
 

@@ -2,6 +2,7 @@ import React from 'react';
 import LkParent from './LkParent'
 import LkAdmin from './LkAdmin'
 
+// Роутер перехода в нужный личный кабинет в зависимости от роли пользователя
 const LkRoute = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }) => {
     if (user.role === "PARENT") {
         return <LkParent
@@ -11,11 +12,17 @@ const LkRoute = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage })
             setAlertType={setAlertType}
             setAlertMessage={setAlertMessage}
         />;
-    } else if (user.role === "CHILD") {
-        return <div>Личный кабинет не предусмотрен для пользователя с таким типом.</div>;
-    } else if (user.role === "MANAGER") {
+    }
 
-    } else if (user.role === "ADMIN") {
+    else if (user.role === "CHILD") {
+        return <div>Личный кабинет не предусмотрен для пользователя с таким типом.</div>;
+    }
+
+    else if (user.role === "MANAGER") {
+
+    }
+
+    else if (user.role === "ADMIN") {
         return <LkAdmin
             user={user}
             setUser={setUser}
@@ -23,7 +30,9 @@ const LkRoute = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage })
             setAlertType={setAlertType}
             setAlertMessage={setAlertMessage}
         />;
-    } else {
+    }
+
+    else {
         return <div>Личный кабинет не предусмотрен для пользователя с таким типом.</div>;
     }
 };

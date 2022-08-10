@@ -12,6 +12,7 @@ const styles = {
     },
 };
 
+// Глобальный спиннер по центру экрана
 export const GlobalLoader = () => {
     return <PulseLoader style={styles.loader} speedMultiplier={2} color={"#42a5f5"} size={15} />
 }

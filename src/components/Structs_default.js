@@ -1,3 +1,4 @@
+// Стандартная структура пользователя
 const UserDefault = {
     role:"",
     email:"",
@@ -8,6 +9,7 @@ const UserDefault = {
     phone: ""
 }
 
+// Стандартная структура родителя
 const ParentDefault = {
     "passport": "",
     "passport_verified": true,

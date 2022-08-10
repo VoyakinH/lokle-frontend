@@ -12,15 +12,65 @@ import {deleteRequestHandler, getRequestHandler, postRequestHandler} from "./Req
 
 import { UserDefault } from "./Structs_default";
 
+const styles = {
+    paperGuide: {
+        padding: "10px 15px 10px 15px",
+        borderRadius: 15,
+        backgroundColor: yellow[300],
+    },
+    paperManager: {
+        padding: 10,
+        borderRadius: 15,
+        minWidth:290,
+    },
+    paperManagerBase: {
+        padding: "103px 10px 103px 10px",
+        borderRadius: 15,
+        minWidth:290,
+        height: 37,
+        textAlign: 'center',
+    },
+}
+
 const LkAdmin = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }) => {
     let navigate = useNavigate();
 
+    // Список менеджеров
     const [managersList, setManagersList] = useState(null);
     const [managersListUpdateCounter, setManagersListUpdateCounter] = useState(0);
     const [isManagersListLoading, setIsManagersListLoading] = useState(false);
 
+    // Диалоговое окно регистрации менеджера
     const [openAddManagerDialog, setOpenAddManagerDialog] = useState(false);
 
+    const [firstName, setFirstName] = useState("");
+    const [secondName, setSecondName] = useState("");
+    const [lastName, setLastName] = useState("");
+
+    const [email, setEmail] = useState("");
+    const [emailValidated, setEmailValidated] = useState(true);
+    const [emailHelpText, setEmailHelpText] = useState("");
+
+    const [password, setPassword] = useState("");
+    const [passwordValidated, setPasswordValidated] = useState(true);
+    const [passwordHelpText, setPasswordHelpText] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+
+    const [phone, setPhone] = useState("");
+
+    const [managerRegistrationDisabled, setManagerRegistrationDisabled] = useState(true);
+    const [isManagerRegistrationLoading, setIsManagerRegistrationLoading] = useState(false);
+
+    // Проверка возможности регистрации
+    useEffect(() => {
+        if (emailValidated && passwordValidated && email !== "" && password !== "") {
+            setManagerRegistrationDisabled(false);
+        } else {
+            setManagerRegistrationDisabled(true);
+        }
+    }, [emailValidated, passwordValidated]);
+
+    // Получение списка зарегистрированных менеджеров
     useEffect(() => {
         setIsManagersListLoading(true);
         getRequestHandler('/api/v1/user/admin/managers').then(response => {
@@ -42,6 +92,7 @@ const LkAdmin = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage })
         });
     }, [managersListUpdateCounter])
 
+    // Обработчик кнопки логаута
     const onLogoutClick = () => {
         deleteRequestHandler('/api/v1/user/auth').then(response => {
             switch (response.status) {
@@ -57,6 +108,7 @@ const LkAdmin = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage })
         })
     };
 
+    // Расчёт контента таблички ФИО пользователя
     const ProfileChip = () => {
         let fio = `${user.second_name} ${user.first_name[0]}.`;
         if (user.last_name !== "") {
@@ -65,6 +117,7 @@ const LkAdmin = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage })
         return <Chip sx={{color: blue[50]}} label={fio} />
     };
 
+    // Рендер карточек менеджеров
     const ManagerCards = () => {
         return (managersList && managersList.map((manager) => (
             <Grid item key={`managerGrid${manager.id}`}>
@@ -94,19 +147,28 @@ const LkAdmin = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage })
         )))
     };
 
+    // Обработчик закрытия диалоговоего окна регистрации менеджеров
     const handleCloseAddManagerDialog = () => {
         setOpenAddManagerDialog(false);
     }
 
-    const [firstName, setFirstName] = useState("");
-    const [secondName, setSecondName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [phone, setPhone] = useState("");
+    // Обработчик открытия диалоговоего окна регистрации менеджеров
+    const handleOpenAddManagerDialog = () => {
+        setFirstName("");
+        setSecondName("");
+        setLastName("");
+        setPhone("");
+        setEmail("");
+        setEmailValidated(true);
+        setEmailHelpText("");
+        setPassword("");
+        setPasswordValidated(true);
+        setPasswordHelpText("");
+        setShowPassword(false);
+        setOpenAddManagerDialog(true);
+    }
 
-    const [email, setEmail] = useState("");
-    const [emailValidated, setEmailValidated] = useState(true);
-    const [emailHelpText, setEmailHelpText] = useState("");
-
+    // Обработчик изменения email с валидацией
     const handleEmailChanged = (e) => {
         const val = e.target.value;
         const len = val.length;
@@ -125,11 +187,7 @@ const LkAdmin = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage })
         }
     };
 
-    const [password, setPassword] = useState("");
-    const [passwordValidated, setPasswordValidated] = useState(true);
-    const [passwordHelpText, setPasswordHelpText] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
-
+    // Обработчик изменения password с валидацией
     const handlePasswordChanged = (e) => {
         const val = e.target.value;
         const len = val.length;
@@ -146,6 +204,8 @@ const LkAdmin = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage })
             setPasswordHelpText("");
         }
     };
+
+    // Обработчик нажатия показать пароль
     const onShowPasswordClick = () => {
         setShowPassword(!showPassword);
     };
@@ -153,21 +213,11 @@ const LkAdmin = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage })
         event.preventDefault();
     };
 
-    const [managerRegistrationDisabled, setManagerRegistrationDisabled] = useState(true);
-    useEffect(() => {
-        if (emailValidated && passwordValidated && email !== "" && password !== "") {
-            setManagerRegistrationDisabled(false);
-        } else {
-            setManagerRegistrationDisabled(true);
-        }
-    }, [emailValidated, passwordValidated]);
-
-    const [isManagerRegistrationLoading, setIsManagerRegistrationLoading] = useState(false);
-
+    // Обработчик регистрации менеджера
     const onManagerRegistrationClick = () => {
         setIsManagerRegistrationLoading(true);
         setManagerRegistrationDisabled(true);
-        postRequestHandler('/api/v1/user/manager',
+        postRequestHandler('/api/v1/user/admin/manager',
             {first_name: firstName,
                 second_name: secondName,
                 last_name: lastName,
@@ -205,26 +255,6 @@ const LkAdmin = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage })
             })
     };
 
-    const styles = {
-        paperGuide: {
-            padding: "10px 15px 10px 15px",
-            borderRadius: 15,
-            backgroundColor: yellow[300],
-        },
-        paperManager: {
-            padding: 10,
-            borderRadius: 15,
-            minWidth:290,
-        },
-        paperManagerBase: {
-            padding: "103px 10px 103px 10px",
-            borderRadius: 15,
-            minWidth:290,
-            height: 37,
-            textAlign: 'center',
-        },
-    }
-
     return (
         <Box>
             <AppBar>
@@ -243,6 +273,7 @@ const LkAdmin = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage })
                 </Toolbar>
             </AppBar>
             <Toolbar />
+
             <Paper elevation={6} style={styles.paperGuide} >
                 <Typography variant="body1">
                     На данной странице Вы можете регистрировать менеджеров.
@@ -250,25 +281,30 @@ const LkAdmin = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage })
                     Менеджеру не нужно будет подтвержать свою почту, она будет служить логином для входа в его личный кабинет.
                 </Typography>
             </Paper>
+
             <Typography variant="h5" mt={2} mb={2}>
                 Менеджеры
             </Typography>
+
             <Grid container spacing={2} justifyContent="flex-start">
+                <ManagerCards/>
+
                 <Grid item key={`managerGridBase`}>
                     <Paper elevation={6} style={styles.paperManagerBase}>
                         {isManagersListLoading?
-                        <PulseLoader speedMultiplier={2} color={blue[500]} size={10} />:
-                        <Button
-                            onClick={() => {setOpenAddManagerDialog(true)}}
-                        >
-                            Добавить менеджера
-                        </Button>}
+                            <PulseLoader speedMultiplier={2} color={blue[500]} size={10} />:
+                            <Button
+                                onClick={handleOpenAddManagerDialog}
+                            >
+                                Добавить менеджера
+                            </Button>}
                     </Paper>
                 </Grid>
-                <ManagerCards/>
             </Grid>
+
             <Dialog maxWidth={'xs'} open={openAddManagerDialog} onClose={handleCloseAddManagerDialog}>
                 <DialogTitle>Регистрация менеджера</DialogTitle>
+
                 <DialogContent >
                     <TextField
                         style={styles.textFieldStyle}
@@ -330,6 +366,7 @@ const LkAdmin = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage })
                         onChange={e => {setPhone(e.target.value)}}
                     />
                 </DialogContent>
+
                 <DialogActions>
                     <Button
                         onClick={onManagerRegistrationClick}
@@ -340,6 +377,7 @@ const LkAdmin = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage })
                             <div> <PulseLoader speedMultiplier={2} color={blue[500]} size={7} /></div>:
                             "Зарегистрировать"}
                     </Button>
+
                     <Button color={'error'} onClick={handleCloseAddManagerDialog}>Отмена</Button>
                 </DialogActions>
             </Dialog>

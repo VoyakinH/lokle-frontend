@@ -10,10 +10,56 @@ import { postRequestHandler } from "./Requests";
 const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
     let navigate = useNavigate();
 
+    // Данные о пользователе
     const [firstName, setFirstName] = useState("");
     const [firstNameValidated, setFirstNameValidated] = useState(true);
     const [firstNameHelpText, setFirstNameHelpText] = useState(" ");
 
+    const [secondName, setSecondName] = useState("");
+    const [secondNameValidated, setSecondNameValidated] = useState(true);
+    const [secondNameHelpText, setSecondNameHelpText] = useState(" ");
+
+    const [lastName, setLastName] = useState("");
+    const [lastNameValidated, setLastNameValidated] = useState(true);
+    const [lastNameHelpText, setLastNameHelpText] = useState(" ");
+
+    const [email, setEmail] = useState("");
+    const [emailValidated, setEmailValidated] = useState(true);
+    const [emailHelpText, setEmailHelpText] = useState(" ");
+
+    const [password, setPassword] = useState("");
+    const [passwordValidated, setPasswordValidated] = useState(true);
+    const [passwordHelpText, setPasswordHelpText] = useState(" ");
+    const [showPassword, setShowPassword] = useState(false);
+
+    const [passwordCheck, setPasswordCheck] = useState("");
+    const [passwordCheckValidated, setPasswordCheckValidated] = useState(true);
+    const [passwordCheckHelpText, setPasswordCheckHelpText] = useState(" ");
+    const [showPasswordCheck, setShowPasswordCheck] = useState(false);
+
+    const [phone, setPhone] = useState("");
+    const [phoneValidated, setPhoneValidated] = useState(true);
+    const [phoneHelpText, setPhoneHelpText] = useState(" ");
+
+    // Разрешена ли регистрация
+    const [registrationDisabled, setRegistrationDisabled] = useState(true);
+
+    // Проверка возможности регистрации
+    useEffect(() => {
+        if (firstNameValidated && secondNameValidated && lastNameValidated &&
+            emailValidated && passwordValidated && passwordCheckValidated && phoneValidated &&
+            firstName !== "" && secondName !== "" && email !== "" && password !== "" &&
+            passwordCheck !== "" && phone !== "") {
+            setRegistrationDisabled(false);
+        } else {
+            setRegistrationDisabled(true);
+        }
+    }, [firstNameValidated, secondNameValidated, lastNameValidated, emailValidated,
+        passwordValidated, passwordCheckValidated, phoneValidated]);
+
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Обработчик изменения имени с валидацией
     const handleFirstNameChanged = (e) => {
         const val = e.target.value;
         const len = val.length;
@@ -35,10 +81,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
         }
     };
 
-    const [secondName, setSecondName] = useState("");
-    const [secondNameValidated, setSecondNameValidated] = useState(true);
-    const [secondNameHelpText, setSecondNameHelpText] = useState(" ");
-
+    // Обработчик изменения фамилии с валидацией
     const handleSecondNameChanged = (e) => {
         const val = e.target.value;
         const len = val.length;
@@ -60,10 +103,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
         }
     };
 
-    const [lastName, setLastName] = useState("");
-    const [lastNameValidated, setLastNameValidated] = useState(true);
-    const [lastNameHelpText, setLastNameHelpText] = useState(" ");
-
+    // Обработчик изменения отчества с валидацией
     const handleLastNameChanged = (e) => {
         const val = e.target.value;
         const len = val.length;
@@ -83,10 +123,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
         }
     };
 
-    const [email, setEmail] = useState("");
-    const [emailValidated, setEmailValidated] = useState(true);
-    const [emailHelpText, setEmailHelpText] = useState(" ");
-
+    // Обработчик изменения email с валидацией
     const handleEmailChanged = (e) => {
         const val = e.target.value;
         const len = val.length;
@@ -105,11 +142,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
         }
     };
 
-    const [password, setPassword] = useState("");
-    const [passwordValidated, setPasswordValidated] = useState(true);
-    const [passwordHelpText, setPasswordHelpText] = useState(" ");
-    const [showPassword, setShowPassword] = useState(false);
-
+    // Обработчик изменения пароля с валидацией
     const handlePasswordChanged = (e) => {
         const val = e.target.value;
         const len = val.length;
@@ -130,6 +163,8 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
             setPasswordCheckValidated(false);
         }
     };
+
+    // Обработчик кнопки показа пароля
     const onShowPasswordClick = () => {
         setShowPassword(!showPassword);
     };
@@ -137,11 +172,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
         event.preventDefault();
     };
 
-    const [passwordCheck, setPasswordCheck] = useState("");
-    const [passwordCheckValidated, setPasswordCheckValidated] = useState(true);
-    const [passwordCheckHelpText, setPasswordCheckHelpText] = useState(" ");
-    const [showPasswordCheck, setShowPasswordCheck] = useState(false);
-
+    // Обработчик изменения проверки пароля с валидацией
     const handlePasswordCheckChanged = (e) => {
         const val = e.target.value;
         setPasswordCheck(val);
@@ -153,6 +184,8 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
             setPasswordCheckHelpText(" ");
         }
     };
+
+    // Обработчик кнопки показа проверки пароля
     const onShowPasswordCheckClick = () => {
         setShowPasswordCheck(!showPasswordCheck);
     };
@@ -160,10 +193,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
         event.preventDefault();
     };
 
-    const [phone, setPhone] = useState("");
-    const [phoneValidated, setPhoneValidated] = useState(true);
-    const [phoneHelpText, setPhoneHelpText] = useState(" ");
-
+    // Обработчик изменения телефона с валидацией
     const handlePhoneChanged = (e) => {
         const val = e.target.value.replace(/\D/g,"");
         const len = val.length;
@@ -177,22 +207,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
         }
     };
 
-    const [registrationDisabled, setRegistrationDisabled] = useState(true);
-
-    useEffect(() => {
-        if (firstNameValidated && secondNameValidated && lastNameValidated &&
-            emailValidated && passwordValidated && passwordCheckValidated && phoneValidated &&
-            firstName !== "" && secondName !== "" && email !== "" && password !== "" &&
-            passwordCheck !== "" && phone !== "") {
-            setRegistrationDisabled(false);
-        } else {
-            setRegistrationDisabled(true);
-        }
-    }, [firstNameValidated, secondNameValidated, lastNameValidated, emailValidated,
-        passwordValidated, passwordCheckValidated, phoneValidated]);
-
-    const [isLoading, setIsLoading] = useState(false);
-
+    // Обработчик регистрации пользователя
     const onRegistrationClick = () => {
         setRegistrationDisabled(true);
         setIsLoading(true);
@@ -230,6 +245,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
         })
     }
 
+    // Обработчик перехода на страницу авторизации
     const onLoginClick = () => {
         navigate("/login", { replace: true })
     }
@@ -282,6 +298,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
                     Регистрация родителя
                 </Typography>
             </Grid>
+
             <TextField
                 style={styles.textFieldStyle}
                 variant="standard"
@@ -372,6 +389,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
                 error={!phoneValidated}
                 helperText={phoneHelpText}
             />
+
             <Button
                 style={styles.buttonRegistrationStyle}
                 fullWidth
@@ -385,6 +403,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
                     "Зарегистрироваться"
                 }
             </Button>
+
             <Button
                 style={styles.buttonLoginStyle}
                 fullWidth

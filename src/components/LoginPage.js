@@ -11,11 +11,48 @@ import { getRequestHandler, postRequestHandler } from "./Requests";
 const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => {
     let navigate = useNavigate();
 
+    // Url query
     const [searchParams, _] = useSearchParams();
 
+    // Поле почты пользователя
+    const [email, setEmail] = useState("");
+    const [emailValidated, setEmailValidated] = useState(true);
+    const [emailHelpText, setEmailHelpText] = useState(" ");
+
+    // Поле пароля пользователя
+    const [password, setPassword] = useState("");
+    const [passwordValidated, setPasswordValidated] = useState(true);
+    const [passwordHelpText, setPasswordHelpText] = useState(" ");
+    const [showPassword, setShowPassword] = useState(false);
+
+    // Отображать ли спиннер загрузки во время авторизации
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Доступна ли авторизация с такими логином, паролем
+    const [loginDisabled, setLoginDisabled] = useState(true);
+
+    // Логин или пароль не найдены в базе
+    const [isCredentialsIncorrect, setIsCredentialsIncorrect] = useState(false);
+
+    // Локальное уведомление, для возможности повторить отправку письма с подтвержением почты
+    const [openAlertLoginPage, setOpenAlertLoginPage] = React.useState(false);
+    const [alertTypeLoginPage, setAlertTypeLoginPage] = React.useState('info');
+    const [alertMessageLoginPage, setAlertMessageLoginPage] = React.useState("");
+
+    // Проверка возможности авторизации с такими логином, паролем
+    useEffect(() => {
+        if (emailValidated && passwordValidated && !isCredentialsIncorrect && email !== "" && password !== "") {
+            setLoginDisabled(false);
+        } else {
+            setLoginDisabled(true);
+        }
+    }, [emailValidated, passwordValidated, isCredentialsIncorrect]);
+
+    // Проверка токена подтвержения почты и флага успешной регистрации из url query
     useEffect(() => {
         const token = searchParams.get("verification_email_token");
         const registered = searchParams.get("registered");
+
         if (token) {
             setOpenAlert(false);
             getRequestHandler(`/api/v1/user/email?token=${token}`).then(response => {
@@ -35,7 +72,8 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
                 }
             });
         }
-        if (registered === "true") {
+
+        else if (registered === "true") {
             setAlertType('success');
             setAlertMessage("Вы успешно зарегистрированы. На Вашу почту отправлена ссылка для подтверждения.");
             setOpenAlert(true);
@@ -43,10 +81,7 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
 
     }, [])
 
-    const [email, setEmail] = useState("");
-    const [emailValidated, setEmailValidated] = useState(true);
-    const [emailHelpText, setEmailHelpText] = useState(" ");
-
+    // Обработчик изменения email с валидацией
     const handleEmailChanged = (e) => {
         const val = e.target.value;
         const len = val.length;
@@ -66,11 +101,7 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
         }
     };
 
-    const [password, setPassword] = useState("");
-    const [passwordValidated, setPasswordValidated] = useState(true);
-    const [passwordHelpText, setPasswordHelpText] = useState(" ");
-    const [showPassword, setShowPassword] = useState(false);
-
+    // Обработчик изменения пароля с валидацией
     const handlePasswordChanged = (e) => {
         const val = e.target.value;
         const len = val.length;
@@ -85,18 +116,15 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
         }
     };
 
-    // Is email or password incorrect
-    const [isCredentialsIncorrect, setIsCredentialsIncorrect] = useState(false);
-
-    const [isLoading, setIsLoading] = useState(false);
-
-    const [openAlertLoginPage, setOpenAlertLoginPage] = React.useState(false);
-    const [alertTypeLoginPage, setAlertTypeLoginPage] = React.useState('info');
-    const [alertMessageLoginPage, setAlertMessageLoginPage] = React.useState("");
-    const onCloseAlertLoginPageClick = () => {
-        setOpenAlertLoginPage(false);
+    // Обработчик кнопки показать пароль
+    const onShowPasswordClick = () => {
+        setShowPassword(!showPassword);
+    };
+    const handleMouseDownPassword = (event) => {
+        event.preventDefault();
     };
 
+    // Обработчик кнопки авторизации
     const onLoginClick = e => {
         e.preventDefault();
         setIsLoading(true);
@@ -136,17 +164,12 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
             })
     };
 
+    // Обработчик кнопки перехода на страницу регистрации
     const onRegistrationClick = () => {
         navigate("/registration")
     }
 
-    const onShowPasswordClick = () => {
-        setShowPassword(!showPassword);
-    };
-    const handleMouseDownPassword = (event) => {
-        event.preventDefault();
-    };
-
+    // Обработчик кнопки повторной отправки подтвержения почты
     const onSendEmailClick = e => {
         e.preventDefault();
         setOpenAlertLoginPage(false);
@@ -179,15 +202,10 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
             })
     }
 
-    const [loginDisabled, setLoginDisabled] = useState(true);
-
-    useEffect(() => {
-        if (emailValidated && passwordValidated && !isCredentialsIncorrect && email !== "" && password !== "") {
-            setLoginDisabled(false);
-        } else {
-            setLoginDisabled(true);
-        }
-    }, [emailValidated, passwordValidated, isCredentialsIncorrect]);
+    // Обработчик кнопки закрытия локального уведомления
+    const onCloseAlertLoginPageClick = () => {
+        setOpenAlertLoginPage(false);
+    };
 
     const styles = {
         paperStyle: {
@@ -237,6 +255,7 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
                     АВТОРИЗАЦИЯ
                 </Typography>
             </Grid>
+
             <TextField
                 style={styles.textFieldStyle}
                 error={!emailValidated || isCredentialsIncorrect}
@@ -268,6 +287,7 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
                 />
                 <FormHelperText id="login-password-text-field">{passwordHelpText}</FormHelperText>
             </FormControl>
+
             <Button
                 style={styles.buttonLoginStyle}
                 onClick={onLoginClick}
@@ -281,6 +301,7 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
                     "Войти"
                 }
             </Button>
+
             <Button
                 style={styles.buttonRegistrationStyle}
                 onClick={onRegistrationClick}
@@ -290,6 +311,7 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
             >
                 Регистрация
             </Button>
+
             <Snackbar
                 open={openAlertLoginPage}
                 autoHideDuration={6000}
