@@ -1,5 +1,6 @@
 // Стандартная структура пользователя
 const UserDefault = {
+    id: "",
     role:"",
     email:"",
     email_verified:"",

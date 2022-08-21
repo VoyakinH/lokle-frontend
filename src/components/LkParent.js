@@ -11,15 +11,14 @@ import {
     TextField,
     FormControl, InputLabel, Input, InputAdornment, IconButton, FormHelperText, DialogActions, Dialog, Grid
 } from '@mui/material';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Box } from '@mui/material';
-import { Logout, AccountCircle, VisibilityOff, Visibility } from '@mui/icons-material';
-import { TabContext, TabList, TabPanel } from '@mui/lab';
-import { useNavigate } from "react-router-dom";
-import { deleteRequestHandler, getRequestHandler, postRequestHandler } from "./Requests";
-import { UserDefault, ParentDefault } from "./Structs_default";
-import { blue, yellow } from '@mui/material/colors';
-import { PulseLoader } from "react-spinners";
-import DocViewer from "react-doc-viewer";
+import {Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Box} from '@mui/material';
+import {Logout, AccountCircle, VisibilityOff, Visibility} from '@mui/icons-material';
+import {TabContext, TabList, TabPanel} from '@mui/lab';
+import {useNavigate} from "react-router-dom";
+import {deleteRequestHandler, getRequestHandler, postRequestHandler} from "./Requests";
+import {UserDefault, ParentDefault} from "./Structs_default";
+import {blue, yellow} from '@mui/material/colors';
+import {PulseLoader} from "react-spinners";
 
 const styles = {
     paperPassportParent: {
@@ -30,14 +29,14 @@ const styles = {
     paperChildBase: {
         padding: "103px 10px 103px 10px",
         borderRadius: 15,
-        minWidth:290,
+        minWidth: 290,
         height: 37,
         textAlign: 'center',
     },
     paperChild: {
         padding: 10,
         borderRadius: 15,
-        minWidth:290,
+        minWidth: 290,
     },
     // paperBudget: {
     //     position: 'absolute',
@@ -71,13 +70,13 @@ const styles = {
     // },
 }
 
-const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }) => {
+const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) => {
     let navigate = useNavigate();
 
     // Данные родителя
     const [parent, setParent] = useState(ParentDefault);
     // Заяка на прикрепление паспорта родителя
-    const [parentPassportRequest, setParentPassportRequest] = useState(null);
+    const [parentPassportRequest, setParentPassportRequest] = useState({});
 
     // Список детей родителя
     const [children, setChildren] = useState(null);
@@ -91,7 +90,7 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
     const [isDialogSendLoading, setIsDialogSendLoading] = useState(false);
 
     // Прикреплённые документы
-    const [selectedFile, setSelectedFile] = useState("");
+    const [selectedFiles, setSelectedFiles] = useState("");
     // Кол-во прикреплённых документов
     const [filesCount, setFilesCount] = useState({});
 
@@ -138,53 +137,53 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
     // }, [firstNameValidated, secondNameValidated, lastNameValidated, emailValidated,
     //     passwordValidated, passwordCheckValidated, phoneValidated]);
 
-    const [isLoading, setIsLoading] = useState(false);
 
-    const [type, setType] = useState("");
-    const [png, setPng] = useState("");
-
-    useEffect(() => {
-        postRequestHandler('/api/v1/file/download',
-            {
-                user_id: 102,
-                file_name: "passport"
-            })
-            .then(response => {
-            switch (response.status) {
-                case 200:
-                    const byteCharacters = atob(response.data.files[0].file);
-                    const byteNumbers = new Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) {
-                        byteNumbers[i] = byteCharacters.charCodeAt(i);
-                    }
-                    const byteArray = new Uint8Array(byteNumbers);
-                    const blob = new Blob([byteArray], {type: response.data.files[0].type});
-
-                    console.log(URL.createObjectURL(blob))
-
-                    // console.log(URL.createObjectURL(blob));
-                    // setType(response.data.files[0].type)
-                    setPng(URL.createObjectURL(blob))
-                    break;
-                case 401:
-                    // logout();
-                    break;
-                default:
-                    // showBackendFailAlert();
-                    console.log("back fail");
-            }
-        });
-    }, [])
+    // useEffect(() => {
+    //     postRequestHandler('/api/v1/file/download',
+    //         {
+    //             user_id: 102,
+    //             file_name: "passport"
+    //         })
+    //         .then(response => {
+    //         switch (response.status) {
+    //             case 200:
+    //
+    //                 console.log(response.data);
+    //
+    //                 // const byteCharacters = atob(response.data.files[0].file);
+    //                 // const byteNumbers = new Array(byteCharacters.length);
+    //                 // for (let i = 0; i < byteCharacters.length; i++) {
+    //                 //     byteNumbers[i] = byteCharacters.charCodeAt(i);
+    //                 // }
+    //                 // const byteArray = new Uint8Array(byteNumbers);
+    //                 // const blob = new Blob([byteArray], {type: response.data.files[0].type});
+    //
+    //                 // console.log(URL.createObjectURL(blob))
+    //
+    //                 // console.log(URL.createObjectURL(blob));
+    //                 // setType(response.data.files[0].type)
+    //                 // setPng(URL.createObjectURL(blob));
+    //                 break;
+    //             case 401:
+    //                 // logout();
+    //                 break;
+    //             default:
+    //                 // showBackendFailAlert();
+    //                 console.log("back fail");
+    //         }
+    //     });
+    // }, [])
 
     // Получение данных родителя при загрузке страницы
     useEffect(() => {
         getRequestHandler('/api/v1/user/parent').then(response => {
+            // @ts-ignore
             switch (response.status) {
-                case 200:
-                    setParent(response.data);
-                    break;
                 case 401:
                     logout();
+                    break;
+                case 200:
+                    setParent(response.data);
                     break;
                 default:
                     showBackendFailAlert();
@@ -198,13 +197,19 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
             getRequestHandler('/api/v1/reg/request/parent/list').then(response => {
                 switch (response.status) {
                     case 200:
-                        setParentPassportRequest(response.data);
+                        setParentPassportRequest(response.data[0]);
                         break;
                     case 401:
+                        console.log("/reg/request/parent/list 401")
                         logout();
                         break;
+                    case 404:
+                        console.log("/reg/request/parent/list 404")
+                        break;
                     default:
+                        console.log("/reg/request/parent/list 500");
                         showBackendFailAlert();
+
                 }
             });
         }
@@ -214,6 +219,8 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
     useEffect(() => {
         setIsChildrenListLoading(true);
         getRequestHandler('/api/v1/user/parent/children').then(response => {
+            if (!response)
+                return;
             switch (response.status) {
                 case 200:
                     setChildren(response.data);
@@ -232,7 +239,7 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
     const logout = () => {
         setParent(ParentDefault);
         setUser(UserDefault);
-        navigate("/login", { replace: true });
+        navigate("/login", {replace: true});
     }
 
     // Функция для вывода информации об ошибке бекенда
@@ -248,7 +255,7 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
         if (user.last_name !== "") {
             fio += ` ${user.last_name[0]}.`;
         }
-        return <Chip sx={{color: blue[50]}} label={fio} />
+        return <Chip sx={{color: blue[50]}} label={fio}/>
     };
 
     // Обработчик кнопки логаута
@@ -267,22 +274,29 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
     // Очистка файлов нужного типа на сервере
     const filesDelete = (userId, fileName) => {
         postRequestHandler('/api/v1/file/delete',
-            {user_id: userId,
-                file_name: fileName})
+            {
+                user_id: userId,
+                file_name: fileName
+            })
             .then(response => {
                 switch (response.status) {
                     case 200:
-                        console.log("Файлы удалены");
                         break;
                     case 400:
-                        console.log("Файлов нет");
+                        console.log("/api/v1/file/delete 400 Файлов на сервере нет.");
                         break;
                     case 403:
+                        console.log("/api/v1/file/delete 403");
+                        break;
+                    case 404:
+                        console.log("/api/v1/file/delete 404");
                         break;
                     case 401:
+                        console.log("/api/v1/file/delete 401 Пользователь не авторизован.");
                         logout();
                         break;
                     default:
+                        console.log("/api/v1/file/delete 500");
                         setAlertType('error');
                         setAlertMessage("Сервис временно недоступен. Попробуйте позднее.");
                         setOpenAlert(true);
@@ -291,20 +305,26 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
     }
 
     // Выгрузка файлов на сервер
-    const fileUpload = (file, userID) => {
+    const fileUpload = (file, userID, fileBaseName) => {
         postRequestHandler('/api/v1/file/upload',
-            {file: file,
-                userID: userID}, true)
+            {
+                file: file,
+                userID: userID,
+                filename: fileBaseName
+            }, true)
             .then(response => {
                 switch (response.status) {
                     case 200:
-                        console.log("файл загружен")
+                        console.log("файл загружен");
                         break;
                     case 400:
+                        console.log("/api/v1/file/upload 400");
                         break;
                     case 403:
+                        console.log("/api/v1/file/upload 403");
                         break;
                     case 401:
+                        console.log("/api/v1/file/upload 401");
                         break;
                     default:
                         setAlertType('error');
@@ -315,29 +335,28 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
     }
 
     // Были выбраны файлы для прикрепления
-    const filesSelectedHandler = (event, userID, fileBaseName, maxFilesCount, maxFilesSize) => {
+    const filesSelectedHandler = (event, userID, fileBaseName, maxFilesCount) => {
         const selectedFilesCount = event.target.files.length;
         const selectedFiles = event.target.files;
-        const filesCountBaseName = filesCount[fileBaseName]? filesCount[fileBaseName]: 0;
+        const earlySelectedFiles = filesCount[fileBaseName]? filesCount[fileBaseName]: 0;
 
-        if (filesCountBaseName + selectedFilesCount <= maxFilesCount) {
+        if (earlySelectedFiles + selectedFilesCount <= maxFilesCount) {
+            // for (let i = 0; i < selectedFilesCount; i++) {
+            //     if (selectedFiles[i].size > maxFilesSize * 1024 * 1024) {
+            //         console.log(`Размер каждого файла не должен превышать ${maxFilesSize}Mb`);
+            //         return;
+            //     }
+            // }
+
             for (let i = 0; i < selectedFilesCount; i++) {
-                if (selectedFiles[i].size > maxFilesSize * 1024 * 1024) {
-                    console.log(`Размер каждого файла не должен превышать ${maxFilesSize}Mb`);
-                    return;
-                }
+                // const file = new File([selectedFiles[i]],
+                //     `${fileBaseName}_${filesCountBaseName + i}.${selectedFiles[i].type.split('/')[1]}`,
+                //     {type: selectedFiles[i].type});
+                fileUpload(selectedFiles[i], userID, fileBaseName);
             }
 
-            for (let i = 0; i < selectedFilesCount; i++) {
-                const file = new File([selectedFiles[i]],
-                    `${fileBaseName}_${filesCountBaseName + i}.${selectedFiles[i].type.split('/')[1]}`,
-                    {type: selectedFiles[i].type});
-                fileUpload(file, userID);
-            }
-
-            setFilesCount({...filesCount, [fileBaseName]: filesCountBaseName + selectedFilesCount});
-        }
-        else {
+            setFilesCount({...filesCount, [fileBaseName]: earlySelectedFiles + selectedFilesCount});
+        } else {
             console.log("Максимальное кол-во файлов: 3");
         }
     };
@@ -347,9 +366,10 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
         // Паспорт не проверен и не прикреплялся
         if (!parent.passport_verified && parent.passport === "") {
             return (
-                <Paper elevation={6} style={styles.paperPassportParent} >
+                <Paper elevation={6} style={styles.paperPassportParent}>
                     <Typography variant="body1" mb={1}>
-                        Для зачисления ребёнка в ЧУ СОШ «Столичный - КИТ» Вам необходимо подтвердить свои паспортные данные. <br/>
+                        Для зачисления ребёнка в ЧУ СОШ «Столичный - КИТ» Вам необходимо подтвердить свои паспортные
+                        данные. <br/>
                         Если Ваш ребёнок уже обучается в нашей школе, пропустите данный шаг. <br/>
                     </Typography>
                     <Button
@@ -362,27 +382,69 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
                 </Paper>
             )
         } else if (parent.passport_verified === false && parent.passport !== "") {
-            return(<div>паспорт на проверке</div>)
+            return (
+                <Paper elevation={6} style={styles.paperPassportParent}>
+                    <div>ПАСПОРТ</div>
+                    <div>Дата отправки заявки: {
+                        parentPassportRequest.create_time?new Intl.DateTimeFormat('ru-RU', {year: 'numeric', month: '2-digit',day: '2-digit'}).format(parentPassportRequest.create_time):"Загрузка"
+                    }</div>
+                    <div>Стутус: {
+                        parentPassportRequest.status==="pending"?"На проверке.":"Загрузка"
+                    }</div>
+                </Paper>
+
+            )
         }
+        // else if (parent.passport_verified === false && parent.passport !== "") {
+        //     return (
+        //         <Paper elevation={6} style={styles.paperPassportParent}>
+        //             <div>ПАСПОРТ</div>
+        //             <div>Дата отправки заявки: {
+        //                 parentPassportRequest.create_time?parentPassportRequestDate:"Загрузка"
+        //             }</div>
+        //             <div>Стутус: {
+        //                 parentPassportRequest.status==="pending"?"На проверке.":"Загрузка"
+        //             }</div>
+        //         </Paper>
+        //
+        //     )
+        // }
+
     }
+
+    const [parentPassportFilesFromServer, setParentPassportFilesFromServer] = useState([]);
 
     // Обработчик нажатия на кнопку первого добавления паспорта родителя
     const openAddParentPassportDialog = () => {
         setParentPassport("");
         setParentPassportValidated(true);
         setParentPassportHelpText("");
-
-        // setParentPassportFilesCount(0);
-
         setDialogTitle("Добавление паспорта родителя");
         setDialogContentType("parentPassportFirstAdd");
-        setOpenDialog(true);
+
+        // удаление фоток на серве
+        postRequestHandler('/api/v1/file/delete',
+            {
+                user_id: user.id,
+                file_name: "passport"
+            })
+            .then(response => {
+                switch (response.status) {
+                    case 200:
+                    case 400:
+                        setOpenDialog(true);
+                        console.log("Файлы паспорта на сервере удалены.");
+                        break;
+                    default:
+                        showBackendFailAlert();
+                }
+            });
     };
 
     // Обработчик изменения серии номера паспорта родителя
     const handleParentPassportChanged = (e) => {
         const val = e.target.value;
-        const val_nums = val.replace(/\D/g,"");
+        const val_nums = val.replace(/\D/g, "");
         setParentPassport(val);
         setParentPassportValidated(false);
         if (val.length !== 10 || val_nums.length !== 10) {
@@ -408,14 +470,29 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
             />
 
             <Button variant="contained" component="label">
-                Upload
+                Добавить документ или фото
                 <input
                     hidden
                     accept=".png, .jpeg, .jpg, .pdf"
                     multiple
                     type="file"
-                    onChange={(event) => {filesSelectedHandler(event, user.id, "passport", 3, 5)}}
+                    onChange={(event) => {
+                        filesSelectedHandler(event, user.id, "passport", 3);
+                    }}
                 />
+            </Button>
+
+            <h5>Прикреплено файлов: {filesCount["passport"]}</h5>
+
+            <Button
+                color="inherit"
+                onClick={() => {
+                    filesDelete(user.id, "passport");
+                    setFilesCount({...filesCount, passport: 0});
+                    setSelectedFiles("");
+                }}
+            >
+                Удалить прикреплённые фото
             </Button>
         </div>
     );
@@ -530,17 +607,46 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
         setOpenDialog(false);
     };
 
+    // Хендлер нажатия на кнопку отправики паспорта родителя на проверку при первом заполнении паспорта
+    const onSendParentPassportFirstTime = () => {
+        postRequestHandler('/api/v1/reg/request/parent/passport',
+            {
+                passport: parentPassport,
+            })
+            .then(response => {
+
+                switch (response.status) {
+                    case 200:
+                        setOpenDialog(false);
+                        break;
+                    case 400:
+                        console.log("/reg/request/parent/passport Что-то не так со структурой запроса или поле паспорта пустое.");
+                        break;
+                    case 401:
+                        logout();
+                        console.log("/reg/request/parent/passport Не авторизован.");
+                        break;
+                    case 409:
+                        console.log("/reg/request/parent/passport Данные отправлены повторно.");
+                        showBackendFailAlert();
+                        break;
+                    default:
+                        showBackendFailAlert();
+                }
+            });
+    };
+
     return (
         <Box>
             <AppBar>
                 <Toolbar>
-                    <Typography variant="body1" component="div" sx={{ flexGrow: 1 }}>
+                    <Typography variant="body1" component="div" sx={{flexGrow: 1}}>
                         Личный кабинет родителя
                     </Typography>
                     <ProfileChip/>
                     <Button
                         color="inherit"
-                        endIcon={<Logout />}
+                        endIcon={<Logout/>}
                         onClick={onLogoutClick}
                     >
                         Выйти
@@ -560,8 +666,8 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
 
                 <Grid item key={`childGridBase`}>
                     <Paper elevation={6} style={styles.paperChildBase}>
-                        {isChildrenListLoading?
-                            <PulseLoader speedMultiplier={2} color={blue[500]} size={10} />:
+                        {isChildrenListLoading ?
+                            <PulseLoader speedMultiplier={2} color={blue[500]} size={10}/> :
                             <Button
                                 onClick={openAddChildDialog}
                             >
@@ -574,7 +680,7 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
             <Dialog maxWidth={'xs'} open={openDialog} onClose={handleCloseDialog}>
                 <DialogTitle>{dialogTitle}</DialogTitle>
 
-                <DialogContent >
+                <DialogContent>
                     {dialogContentType === "parentPassportFirstAdd" && ParentPassportFirstAddDialogContent}
                     {dialogContentType === "childFirstStageFirstAdd" && ChildFirstStageFirstAddDialogContent}
 
@@ -591,12 +697,19 @@ const LkParent = ({ user, setUser, setOpenAlert, setAlertType, setAlertMessage }
                     {/*        "Отправить"}*/}
                     {/*</Button>*/}
 
+
+                    {
+                        dialogContentType === "parentPassportFirstAdd"?
+                        <Button color={'success'} onClick={onSendParentPassportFirstTime}>Отправить</Button>:
+                        <div></div>
+                    }
+                    {/*<Button color={'success'} onClick={handleCloseDialog}>Отправить</Button>*/}
                     <Button color={'error'} onClick={handleCloseDialog}>Отмена</Button>
                 </DialogActions>
             </Dialog>
             {/*{type !== "" ? <iframe src="https://docs.google.com/gview?url=`data:${type};base64,${png}`&embedded=true"/>: ''}*/}
 
-            {type === "" ? <iframe src={`/pdf.js/web/viewer.html?file=${png}`}/>: ''}
+            {/*{type === "" ? <iframe src={`/pdf.js/web/viewer.html?file=${png}`}/>: ''}*/}
         </Box>
     );
 };

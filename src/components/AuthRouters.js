@@ -1,3 +1,4 @@
+import React from "react";
 import { Navigate } from 'react-router-dom';
 
 // Роутер для проверки авторизован ли пользователь. Дочерний элемент только если авторизован

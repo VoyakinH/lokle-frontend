@@ -95,7 +95,7 @@ function App() {
                                     />
                                 </AuthorizedRoute>
                             } />
-                            {/*<Route path="*" element={<Navigate to="/lk" />} />*/}
+                            <Route path="*" element={<Navigate to="/lk" />} />
                         </Routes>
                     </BrowserRouter>
 
