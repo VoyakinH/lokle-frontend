@@ -386,6 +386,7 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 <Paper elevation={6} style={styles.paperPassportParent}>
                     <div>ПАСПОРТ</div>
                     <div>Дата отправки заявки: {
+                        // Почини меня Дата отправки заявки
                         parentPassportRequest.create_time?new Intl.DateTimeFormat('ru-RU', {year: 'numeric', month: '2-digit',day: '2-digit'}).format(parentPassportRequest.create_time):"Загрузка"
                     }</div>
                     <div>Стутус: {
@@ -515,6 +516,7 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
     // },
     //     "is_student": false
     // }
+
     // Содержимое диалогового окна для первичного выполнения первой стадии регистрации ученика
     const ChildFirstStageFirstAddDialogContent = (
         <div>
@@ -523,20 +525,20 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 variant="standard"
                 label='Имя'
                 fullWidth
-                required
+                // required
                 // onChange={handleFirstNameChanged}
-                error={!firstNameValidated}
-                helperText={firstNameHelpText}
+                // error={!firstNameValidated}
+                // helperText={firstNameHelpText}
             />
             <TextField
                 style={styles.textFieldStyle}
                 variant="standard"
                 label='Фамилия'
                 fullWidth
-                required
+                // required
                 // onChange={handleSecondNameChanged}
-                error={!secondNameValidated}
-                helperText={secondNameHelpText}
+                // error={!secondNameValidated}
+                // helperText={secondNameHelpText}
             />
             <TextField
                 style={styles.textFieldStyle}
@@ -544,8 +546,8 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 label='Отчество'
                 fullWidth
                 // onChange={handleLastNameChanged}
-                error={!lastNameValidated}
-                helperText={lastNameHelpText}
+                // error={!lastNameValidated}
+                // helperText={lastNameHelpText}
             />
             <TextField
                 style={styles.textFieldStyle}
@@ -553,20 +555,20 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 type='email'
                 label='Электронная почта'
                 fullWidth
-                required
+                // required
                 // onChange={handleEmailChanged}
-                error={!emailValidated}
-                helperText={emailHelpText}
+                // error={!emailValidated}
+                // // helperText={emailHelpText}
             />
             <TextField
                 style={styles.textFieldStyle}
                 variant="standard"
                 label='Номер телефона'
                 fullWidth
-                required
+                // required
                 // onChange={handlePhoneChanged}
-                error={!phoneValidated}
-                helperText={phoneHelpText}
+                // error={!phoneValidated}
+                // helperText={phoneHelpText}
             />
             {/*<TextField*/}
             {/*    style={styles.textFieldStyle}*/}
@@ -595,10 +597,10 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 variant="standard"
                 label=''
                 fullWidth
-                required
+                // required
                 // onChange={handlePhoneChanged}
-                error={!phoneValidated}
-                helperText={phoneHelpText}
+                // error={!phoneValidated}
+                // helperText={phoneHelpText}
             />
         </div>
     );
@@ -619,13 +621,13 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                     case 200:
                         setOpenDialog(false);
                         break;
+                    case 401:
+                        console.log("/reg/request/parent/passport Не авторизован.");
+                        break;
                     case 400:
                         console.log("/reg/request/parent/passport Что-то не так со структурой запроса или поле паспорта пустое.");
                         break;
-                    case 401:
                         logout();
-                        console.log("/reg/request/parent/passport Не авторизован.");
-                        break;
                     case 409:
                         console.log("/reg/request/parent/passport Данные отправлены повторно.");
                         showBackendFailAlert();
@@ -635,6 +637,44 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 }
             });
     };
+
+    // Рендер карточек менеджеров
+    const ChildrenCards = () => {
+        return (managersList && managersList.map((manager) => (
+            <Grid item key={`managerGrid${manager.id}`}>
+                <Paper elevation={6} style={styles.paperManager}>
+                    <Typography sx={{ fontSize: 14 }} color="text.secondary">
+                        ФИО
+                    </Typography>
+                    <Typography variant="h6" component="div">
+                        {manager.second_name !== ""? manager.second_name: "Не указана"} <br/>
+                        {manager.first_name !== ""? manager.first_name: "Не указано"} <br/>
+                        {manager.last_name !== ""? manager.last_name: "Не указано"}
+                    </Typography>
+                    <Typography sx={{ fontSize: 14 }} color="text.secondary">
+                        Номер телефона
+                    </Typography>
+                    <Typography variant="h6" component="div">
+                        {manager.phone !== ""? manager.phone: "Не указан"}
+                    </Typography>
+                    <Typography sx={{ fontSize: 14 }} color="text.secondary">
+                        Электронная почта
+                    </Typography>
+                    <Typography variant="h6" component="div">
+                        {manager.email}
+                    </Typography>
+                </Paper>
+            </Grid>
+        )))
+    };
+
+    // Список менеджеров
+    const [managersList, setManagersList] = useState(null);
+    const [managersListUpdateCounter, setManagersListUpdateCounter] = useState(0);
+    const [isManagersListLoading, setIsManagersListLoading] = useState(false);
+
+    // Диалоговое окно регистрации менеджера
+    const [openAddManagerDialog, setOpenAddManagerDialog] = useState(false);
 
     return (
         <Box>
@@ -661,9 +701,11 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 Ученики
             </Typography>
 
+            {/*Кабинет родителя карточки*/}
             <Grid container spacing={2} justifyContent="flex-start">
-                {/*<ManagerCards/>*/}
+                <ChildrenCards/>
 
+                {/*Кабинет родителя карточки добавить ученика стандартная карточка*/}
                 <Grid item key={`childGridBase`}>
                     <Paper elevation={6} style={styles.paperChildBase}>
                         {isChildrenListLoading ?
@@ -677,27 +719,19 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 </Grid>
             </Grid>
 
+            {/*Диалог*/}
             <Dialog maxWidth={'xs'} open={openDialog} onClose={handleCloseDialog}>
                 <DialogTitle>{dialogTitle}</DialogTitle>
 
                 <DialogContent>
+                    {/*Родитель паспорт этапы отправить диалог контент вызов*/}
                     {dialogContentType === "parentPassportFirstAdd" && ParentPassportFirstAddDialogContent}
                     {dialogContentType === "childFirstStageFirstAdd" && ChildFirstStageFirstAddDialogContent}
 
                 </DialogContent>
 
                 <DialogActions>
-                    {/*<Button*/}
-                    {/*    onClick={onManagerRegistrationClick}*/}
-                    {/*    color={'success'}*/}
-                    {/*    disabled={managerRegistrationDisabled}*/}
-                    {/*>*/}
-                    {/*    {isDialogSendLoading?*/}
-                    {/*        <div> <PulseLoader speedMultiplier={2} color={blue[500]} size={7} /></div>:*/}
-                    {/*        "Отправить"}*/}
-                    {/*</Button>*/}
-
-
+                    {/*Родитель паспорт этапы отправить диалог действия вызов*/}
                     {
                         dialogContentType === "parentPassportFirstAdd"?
                         <Button color={'success'} onClick={onSendParentPassportFirstTime}>Отправить</Button>:

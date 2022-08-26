@@ -10,8 +10,8 @@ export const postRequestHandler = async (path, data, isFile=false) => {
         }
     }
     await axios.post(
-        // `http://localhost${path}`,
-        `https://kit.lokle.ru${path}`,
+        `http://localhost${path}`,
+        // `https://kit.lokle.ru${path}`,
         isFile?
             formData:
             JSON.stringify(data),
@@ -30,8 +30,8 @@ export const postRequestHandler = async (path, data, isFile=false) => {
 export const getRequestHandler = async (path) => {
     let result;
     await axios.get(
-        // `http://localhost${path}`,
-        `https://kit.lokle.ru${path}`,
+        `http://localhost${path}`,
+        // `https://kit.lokle.ru${path}`,
         { withCredentials: true }
     )
         .then(response => {
@@ -47,8 +47,8 @@ export const getRequestHandler = async (path) => {
 export const deleteRequestHandler = async (path) => {
     let result;
     await axios.delete(
-        // `http://localhost${path}`,
-        `https://kit.lokle.ru${path}`,
+        `http://localhost${path}`,
+        // `https://kit.lokle.ru${path}`,
         { withCredentials: true }
     )
         .then(response => {
