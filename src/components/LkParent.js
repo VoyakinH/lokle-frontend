@@ -20,6 +20,16 @@ import {UserDefault, ParentDefault} from "./Structs_default";
 import {blue, yellow} from '@mui/material/colors';
 import {PulseLoader} from "react-spinners";
 
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { StaticDatePicker } from '@mui/x-date-pickers/StaticDatePicker';
+import ruLocale from 'dayjs/locale/ru';
+
 const styles = {
     paperPassportParent: {
         padding: "15px 15px 15px 15px",
@@ -75,7 +85,7 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
 
     // Данные родителя
     const [parent, setParent] = useState(ParentDefault);
-    // Заяка на прикрепление паспорта родителя
+    // Заявка на прикрепление паспорта родителя
     const [parentPassportRequest, setParentPassportRequest] = useState({});
 
     // Список детей родителя
@@ -338,7 +348,7 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
     const filesSelectedHandler = (event, userID, fileBaseName, maxFilesCount) => {
         const selectedFilesCount = event.target.files.length;
         const selectedFiles = event.target.files;
-        const earlySelectedFiles = filesCount[fileBaseName]? filesCount[fileBaseName]: 0;
+        const earlySelectedFiles = filesCount[fileBaseName] ? filesCount[fileBaseName] : 0;
 
         if (earlySelectedFiles + selectedFilesCount <= maxFilesCount) {
             // for (let i = 0; i < selectedFilesCount; i++) {
@@ -386,11 +396,18 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 <Paper elevation={6} style={styles.paperPassportParent}>
                     <div>ПАСПОРТ</div>
                     <div>Дата отправки заявки: {
-                        // Почини меня Дата отправки заявки
-                        parentPassportRequest.create_time?new Intl.DateTimeFormat('ru-RU', {year: 'numeric', month: '2-digit',day: '2-digit'}).format(parentPassportRequest.create_time):"Загрузка"
+                        parentPassportRequest.create_time ? new Intl.DateTimeFormat('ru-RU', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            second: 'numeric',
+                            timeZoneName: 'long'
+                        }).format(new Date(parentPassportRequest.create_time * 1000)) : "Загрузка"
                     }</div>
-                    <div>Стутус: {
-                        parentPassportRequest.status==="pending"?"На проверке.":"Загрузка"
+                    <div>Статус: {
+                        parentPassportRequest.status === "pending" ? "На проверке." : "Загрузка"
                     }</div>
                 </Paper>
 
@@ -505,9 +522,24 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
         setOpenDialog(true);
     }
 
+    const [childAlreadyInSchool, setChildAlreadyInSchool] = useState(true);
+
+    const handleChangeChildAlreadyInSchool = (event) => {
+        setChildAlreadyInSchool(event.target.checked);
+    };
+
+
+    const [childFirstName, setChildFirstName] = useState("");
+    const [childSecondName, setChildSecondName] = useState("");
+    const [childLastName, setChildLastName] = useState("");
+    const [childEmail, setChildEmail] = useState("");
+    const [childPhone, setChildPhone] = useState("");
+
+    const [value, setValue] = React.useState(null);
+
     // {
     //     "child": {
-    //     "first_name": "testik",
+    //         "first_name": "testik",
     //         "second_name": "Ребенков2",
     //         "last_name": "Ребенкович2",
     //         "email": "testik@mail.ru",
@@ -520,13 +552,30 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
     // Содержимое диалогового окна для первичного выполнения первой стадии регистрации ученика
     const ChildFirstStageFirstAddDialogContent = (
         <div>
+
+            {parent.passport_verified?<div></div>:<div>Для регистрации ребёнка, который ещё не учился в нашей школе необходимо подтвердить Ваш паспорт. Для этого следуйте инструкциям на главном экране личного кабинета.</div>}
+
+            <FormGroup>
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={childAlreadyInSchool}
+                            onChange={handleChangeChildAlreadyInSchool}
+                            disabled={!parent.passport_verified}
+                        />
+                    }
+                    label="Ученик уже обучался в нашей школе"
+                />
+            </FormGroup>
+
             <TextField
                 style={styles.textFieldStyle}
                 variant="standard"
                 label='Имя'
                 fullWidth
+                // disabled={parent.passport_verified}
                 // required
-                // onChange={handleFirstNameChanged}
+                onChange={e => {setChildFirstName(e.target.value)}}
                 // error={!firstNameValidated}
                 // helperText={firstNameHelpText}
             />
@@ -536,7 +585,7 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 label='Фамилия'
                 fullWidth
                 // required
-                // onChange={handleSecondNameChanged}
+                onChange={e => {setChildSecondName(e.target.value)}}
                 // error={!secondNameValidated}
                 // helperText={secondNameHelpText}
             />
@@ -545,7 +594,7 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 variant="standard"
                 label='Отчество'
                 fullWidth
-                // onChange={handleLastNameChanged}
+                onChange={e => {setChildLastName(e.target.value)}}
                 // error={!lastNameValidated}
                 // helperText={lastNameHelpText}
             />
@@ -556,7 +605,7 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 label='Электронная почта'
                 fullWidth
                 // required
-                // onChange={handleEmailChanged}
+                onChange={e => {setChildEmail(e.target.value)}}
                 // error={!emailValidated}
                 // // helperText={emailHelpText}
             />
@@ -566,20 +615,10 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 label='Номер телефона'
                 fullWidth
                 // required
-                // onChange={handlePhoneChanged}
+                onChange={e => {setChildPhone(e.target.value)}}
                 // error={!phoneValidated}
                 // helperText={phoneHelpText}
             />
-            {/*<TextField*/}
-            {/*    style={styles.textFieldStyle}*/}
-            {/*    variant="standard"*/}
-            {/*    label='Номер телефона'*/}
-            {/*    fullWidth*/}
-            {/*    required*/}
-            {/*    onChange={handlePhoneChanged}*/}
-            {/*    error={!phoneValidated}*/}
-            {/*    helperText={phoneHelpText}*/}
-            {/*/>*/}
 
             {/*<Button variant="contained" component="label">*/}
             {/*    Upload*/}
@@ -592,16 +631,32 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
             {/*    />*/}
             {/*</Button>*/}
 
-            <TextField
-                style={styles.textFieldStyle}
-                variant="standard"
-                label=''
-                fullWidth
-                // required
-                // onChange={handlePhoneChanged}
-                // error={!phoneValidated}
-                // helperText={phoneHelpText}
-            />
+            {/*<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={ruLocale}>*/}
+            {/*    <DatePicker*/}
+            {/*        label="Basic example"*/}
+            {/*        value={value}*/}
+            {/*        onChange={(newValue) => {*/}
+            {/*            console.log(newValue);*/}
+            {/*            setValue(newValue);*/}
+            {/*        }}*/}
+            {/*        renderInput={(params) => <TextField {...params} />}*/}
+            {/*    />*/}
+            {/*</LocalizationProvider>*/}
+            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={ruLocale}>
+                <DatePicker
+                    disableFuture
+                    label="Дата рождения"
+                    openTo="year"
+                    views={['year', 'month', 'day']}
+                    // dayOfWeekFormatter={(day) => `${day}.`}
+                    value={value}
+                    onChange={(newValue) => {
+                        console.log(Date.parse(newValue.$d?newValue.$d:""));
+                        setValue(newValue);
+                    }}
+                    renderInput={(params) => <TextField {...params} />}
+                />
+            </LocalizationProvider>
         </div>
     );
     // Обработчик закрытия диалогового окна
@@ -609,7 +664,7 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
         setOpenDialog(false);
     };
 
-    // Хендлер нажатия на кнопку отправики паспорта родителя на проверку при первом заполнении паспорта
+    // Хендлер нажатия на кнопку отправки паспорта родителя на проверку при первом заполнении паспорта
     const onSendParentPassportFirstTime = () => {
         postRequestHandler('/api/v1/reg/request/parent/passport',
             {
@@ -643,21 +698,21 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
         return (managersList && managersList.map((manager) => (
             <Grid item key={`managerGrid${manager.id}`}>
                 <Paper elevation={6} style={styles.paperManager}>
-                    <Typography sx={{ fontSize: 14 }} color="text.secondary">
+                    <Typography sx={{fontSize: 14}} color="text.secondary">
                         ФИО
                     </Typography>
                     <Typography variant="h6" component="div">
-                        {manager.second_name !== ""? manager.second_name: "Не указана"} <br/>
-                        {manager.first_name !== ""? manager.first_name: "Не указано"} <br/>
-                        {manager.last_name !== ""? manager.last_name: "Не указано"}
+                        {manager.second_name !== "" ? manager.second_name : "Не указана"} <br/>
+                        {manager.first_name !== "" ? manager.first_name : "Не указано"} <br/>
+                        {manager.last_name !== "" ? manager.last_name : "Не указано"}
                     </Typography>
-                    <Typography sx={{ fontSize: 14 }} color="text.secondary">
+                    <Typography sx={{fontSize: 14}} color="text.secondary">
                         Номер телефона
                     </Typography>
                     <Typography variant="h6" component="div">
-                        {manager.phone !== ""? manager.phone: "Не указан"}
+                        {manager.phone !== "" ? manager.phone : "Не указан"}
                     </Typography>
-                    <Typography sx={{ fontSize: 14 }} color="text.secondary">
+                    <Typography sx={{fontSize: 14}} color="text.secondary">
                         Электронная почта
                     </Typography>
                     <Typography variant="h6" component="div">
@@ -733,9 +788,9 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 <DialogActions>
                     {/*Родитель паспорт этапы отправить диалог действия вызов*/}
                     {
-                        dialogContentType === "parentPassportFirstAdd"?
-                        <Button color={'success'} onClick={onSendParentPassportFirstTime}>Отправить</Button>:
-                        <div></div>
+                        dialogContentType === "parentPassportFirstAdd" ?
+                            <Button color={'success'} onClick={onSendParentPassportFirstTime}>Отправить</Button> :
+                            <div></div>
                     }
                     {/*<Button color={'success'} onClick={handleCloseDialog}>Отправить</Button>*/}
                     <Button color={'error'} onClick={handleCloseDialog}>Отмена</Button>
