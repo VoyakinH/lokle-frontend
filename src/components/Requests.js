@@ -16,9 +16,7 @@ export const postRequestHandler = async (path, data, isFile=false) => {
             formData:
             JSON.stringify(data),
         {
-            withCredentials: true,
-            maxContentLength: Infinity,
-            maxBodyLength: Infinity
+            withCredentials: true
         }
     )
         .then(response => {
@@ -37,9 +35,7 @@ export const getRequestHandler = async (path) => {
         // `http://localhost${path}`,
         `https://kit.lokle.ru${path}`,
         {
-            withCredentials: true,
-            maxContentLength: 100000000,
-            maxBodyLength: 1000000000
+            withCredentials: true
         }
     )
         .then(response => {
@@ -58,9 +54,7 @@ export const deleteRequestHandler = async (path) => {
         // `http://localhost${path}`,
         `https://kit.lokle.ru${path}`,
         {
-            withCredentials: true,
-            maxContentLength: 100000000,
-            maxBodyLength: 1000000000
+            withCredentials: true
         }
     )
         .then(response => {
