@@ -247,6 +247,8 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
 
     // Функция логаута
     const logout = () => {
+        setAlertType('error');
+        setAlertMessage("Необходимо войти в аккаунт.");
         setParent(ParentDefault);
         setUser(UserDefault);
         navigate("/login", {replace: true});
@@ -282,36 +284,55 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
     };
 
     // Очистка файлов нужного типа на сервере
-    const filesDelete = (userId, fileName) => {
-        postRequestHandler('/api/v1/file/delete',
+    const filesDelete = async (userId, fileName) => {
+        let successful = false;
+        await postRequestHandler('/api/v1/file/delete',
             {
                 user_id: userId,
                 file_name: fileName
             })
             .then(response => {
                 switch (response.status) {
+                    // case 400:
+                    //     console.log("/api/v1/file/upload 400 Поле для ввода паспорта пустое или неправильная структура запроса.");
+                    //     setAlertType('error');
+                    //     setAlertMessage("Поле для ввода паспорта пустое.");
+                    //     setOpenAlert(true);
+                    //     return;
                     case 200:
+                        console.log("/api/v1/file/delete 200.");
+                        successful = true;
                         break;
                     case 400:
-                        console.log("/api/v1/file/delete 400 Файлов на сервере нет.");
-                        break;
-                    case 403:
-                        console.log("/api/v1/file/delete 403");
-                        break;
-                    case 404:
-                        console.log("/api/v1/file/delete 404");
+                        console.log("/api/v1/file/delete 400.");
+                        successful = true;
                         break;
                     case 401:
-                        console.log("/api/v1/file/delete 401 Пользователь не авторизован.");
+                        console.log("/api/v1/file/delete 401.");
                         logout();
+                        break;
+                    case 403:
+                        // ?????
+                        console.log("/api/v1/file/delete 403.");
+                        showBackendFailAlert();
+                        break;
+                    case 404:
+                        // ?????
+                        console.log("/api/v1/file/delete 404.");
+                        showBackendFailAlert();
                         break;
                     default:
                         console.log("/api/v1/file/delete 500");
-                        setAlertType('error');
-                        setAlertMessage("Сервис временно недоступен. Попробуйте позднее.");
-                        setOpenAlert(true);
+                        showBackendFailAlert();
                 }
             })
+            .then(() => {
+                if (successful) {
+                    setFilesCount({...filesCount, passport: 0});
+                    setSelectedFiles("");
+                }
+            })
+        return successful;
     }
 
     // Выгрузка файлов на сервер
@@ -325,38 +346,44 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
             .then(response => {
                 switch (response.status) {
                     case 200:
-                        console.log("файл загружен");
+                        console.log("/api/v1/file/upload 200 Файл загружен.");
                         break;
                     case 400:
-                        console.log("/api/v1/file/upload 400");
-                        break;
-                    case 403:
-                        console.log("/api/v1/file/upload 403");
-                        break;
+                        console.log("/api/v1/file/upload 400 Поле для ввода паспорта пустое или неправильная структура запроса.");
+                        setAlertType('error');
+                        setAlertMessage("Поле для ввода паспорта пустое.");
+                        setOpenAlert(true);
+                        return;
                     case 401:
-                        console.log("/api/v1/file/upload 401");
+                        console.log("/api/v1/file/upload 401 Необходимо войти в аккаунт.");
+                        logout();
+                        break;
+                    case 413:
+                        console.log(`/api/v1/file/upload 413 Максимальный размер одного файла: ??? Мб.`);
                         break;
                     default:
-                        setAlertType('error');
-                        setAlertMessage("Сервис временно недоступен. Попробуйте позднее.");
-                        setOpenAlert(true);
+                        console.log(`/api/v1/file/upload 500 (backend error: (${response.body}).`);
+                        showBackendFailAlert()
                 }
             })
     }
 
     // Были выбраны файлы для прикрепления
-    const filesSelectedHandler = (event, userID, fileBaseName, maxFilesCount) => {
+    const filesSelectedHandler = (event, userID, fileBaseName, maxFilesCount, maxFileSize) => {
         const selectedFilesCount = event.target.files.length;
         const selectedFiles = event.target.files;
         const earlySelectedFiles = filesCount[fileBaseName] ? filesCount[fileBaseName] : 0;
+        const maxFileSizeBytes = maxFileSize * 1024 * 1024;
 
         if (earlySelectedFiles + selectedFilesCount <= maxFilesCount) {
-            // for (let i = 0; i < selectedFilesCount; i++) {
-            //     if (selectedFiles[i].size > maxFilesSize * 1024 * 1024) {
-            //         console.log(`Размер каждого файла не должен превышать ${maxFilesSize}Mb`);
-            //         return;
-            //     }
-            // }
+            for (let i = 0; i < selectedFilesCount; i++) {
+                if (selectedFiles[i].size > maxFileSizeBytes) {
+                    setAlertType('info');
+                    setAlertMessage(`Максимальный размер одного файла: ${maxFileSize} Мб.`);
+                    setOpenAlert(true);
+                    return;
+                }
+            }
 
             for (let i = 0; i < selectedFilesCount; i++) {
                 // const file = new File([selectedFiles[i]],
@@ -367,7 +394,9 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
 
             setFilesCount({...filesCount, [fileBaseName]: earlySelectedFiles + selectedFilesCount});
         } else {
-            console.log("Максимальное кол-во файлов: 3");
+            setAlertType('info');
+            setAlertMessage(`Максимальное кол-во прикрепляемых файлов: ${maxFilesCount}.`);
+            setOpenAlert(true);
         }
     };
 
@@ -434,27 +463,16 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
 
     // Обработчик нажатия на кнопку первого добавления паспорта родителя
     const openAddParentPassportDialog = () => {
-        setParentPassport("");
-        setParentPassportValidated(true);
-        setParentPassportHelpText("");
-        setDialogTitle("Добавление паспорта родителя");
-        setDialogContentType("parentPassportFirstAdd");
+        filesDelete(user.id, "passport")
+            .then(r => {
+                if (r) {
+                    setParentPassport("");
+                    setParentPassportValidated(true);
+                    setParentPassportHelpText("");
 
-        // удаление фоток на серве
-        postRequestHandler('/api/v1/file/delete',
-            {
-                user_id: user.id,
-                file_name: "passport"
-            })
-            .then(response => {
-                switch (response.status) {
-                    case 200:
-                    case 400:
-                        setOpenDialog(true);
-                        console.log("Файлы паспорта на сервере удалены.");
-                        break;
-                    default:
-                        showBackendFailAlert();
+                    setDialogTitle("Добавление паспорта родителя");
+                    setDialogContentType("parentPassportFirstAdd");
+                    setOpenDialog(true);
                 }
             });
     };
@@ -495,7 +513,7 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                     multiple
                     type="file"
                     onChange={(event) => {
-                        filesSelectedHandler(event, user.id, "passport", 3);
+                        filesSelectedHandler(event, user.id, "passport", 3, 5);
                     }}
                 />
             </Button>
@@ -506,8 +524,6 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 color="inherit"
                 onClick={() => {
                     filesDelete(user.id, "passport");
-                    setFilesCount({...filesCount, passport: 0});
-                    setSelectedFiles("");
                 }}
             >
                 Удалить прикреплённые фото
