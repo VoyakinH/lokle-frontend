@@ -15,7 +15,11 @@ export const postRequestHandler = async (path, data, isFile=false) => {
         isFile?
             formData:
             JSON.stringify(data),
-        { withCredentials: true }
+        {
+            withCredentials: true,
+            maxContentLength: 100000000,
+            maxBodyLength: 1000000000
+        }
     )
         .then(response => {
             result = response
@@ -32,7 +36,11 @@ export const getRequestHandler = async (path) => {
     await axios.get(
         // `http://localhost${path}`,
         `https://kit.lokle.ru${path}`,
-        { withCredentials: true }
+        {
+            withCredentials: true,
+            maxContentLength: 100000000,
+            maxBodyLength: 1000000000
+        }
     )
         .then(response => {
             result = response
@@ -49,7 +57,11 @@ export const deleteRequestHandler = async (path) => {
     await axios.delete(
         // `http://localhost${path}`,
         `https://kit.lokle.ru${path}`,
-        { withCredentials: true }
+        {
+            withCredentials: true,
+            maxContentLength: 100000000,
+            maxBodyLength: 1000000000
+        }
     )
         .then(response => {
             result = response
