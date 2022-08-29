@@ -17,8 +17,8 @@ export const postRequestHandler = async (path, data, isFile=false) => {
             JSON.stringify(data),
         {
             withCredentials: true,
-            maxContentLength: 100000000,
-            maxBodyLength: 1000000000
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity
         }
     )
         .then(response => {
