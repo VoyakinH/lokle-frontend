@@ -327,17 +327,15 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 }
             })
             .then(() => {
-                if (successful) {
-                    setFilesCount({...filesCount, passport: 0});
-                    setSelectedFiles("");
-                }
+                setFilesCount({...filesCount, passport: 0});
+                setSelectedFiles("");
             })
         return successful;
     }
 
     // Выгрузка файлов на сервер
-    const fileUpload = (file, userID, fileBaseName) => {
-        postRequestHandler('/api/v1/file/upload',
+    const fileUpload = async (userID, file, fileBaseName) => {
+        await postRequestHandler('/api/v1/file/upload',
             {
                 file: file,
                 userID: userID,
@@ -346,26 +344,32 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
             .then(response => {
                 switch (response.status) {
                     case 200:
-                        console.log("/api/v1/file/upload 200 Файл загружен.");
+                        console.log("/api/v1/file/upload 200.");
+                        setFilesCount({...filesCount, [fileBaseName]: ++filesCount[fileBaseName]});
                         break;
-                    case 400:
-                        console.log("/api/v1/file/upload 400 Поле для ввода паспорта пустое или неправильная структура запроса.");
-                        setAlertType('error');
-                        setAlertMessage("Поле для ввода паспорта пустое.");
-                        setOpenAlert(true);
-                        return;
                     case 401:
-                        console.log("/api/v1/file/upload 401 Необходимо войти в аккаунт.");
+                        console.log("/api/v1/file/upload 401.");
                         logout();
                         break;
-                    case 413:
-                        console.log(`/api/v1/file/upload 413 Максимальный размер одного файла: ??? Мб.`);
+                    case 400:
+                        console.log("/api/v1/file/upload 400.");
+                        showBackendFailAlert()
                         break;
                     default:
                         console.log(`/api/v1/file/upload 500 (backend error: (${response.body}).`);
                         showBackendFailAlert()
                 }
             })
+    }
+
+    const fileUploadHandler = async(userID, selectedFile, fileBaseName) => {
+        await fileUpload(userID, selectedFile, fileBaseName)
+    }
+
+    const filesUploadHandler = async(userID, selectedFilesCount, selectedFiles, fileBaseName) => {
+        for (let i = 0; i < selectedFilesCount; i++) {
+            await fileUploadHandler(userID, selectedFiles[i], fileBaseName);
+        }
     }
 
     // Были выбраны файлы для прикрепления
@@ -385,14 +389,37 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 }
             }
 
-            for (let i = 0; i < selectedFilesCount; i++) {
-                // const file = new File([selectedFiles[i]],
-                //     `${fileBaseName}_${filesCountBaseName + i}.${selectedFiles[i].type.split('/')[1]}`,
-                //     {type: selectedFiles[i].type});
-                fileUpload(selectedFiles[i], userID, fileBaseName);
-            }
+            filesUploadHandler(userID, selectedFilesCount, selectedFiles, fileBaseName)
+                .then((r) => {
+                    if (filesCount[fileBaseName] - earlySelectedFiles !== selectedFilesCount) {
+                        filesDelete(userID, fileBaseName).then(() => {});
+                    }
+                    // if (!r) {
+                    //     filesDelete(userID, fileBaseName);
+                    // }
+                    // if (r) {
+                    //     setFilesCount({...filesCount, [fileBaseName]: earlySelectedFiles + selectedFilesCount});
+                    // }
+                    // else {
+                    //     filesDelete(userID, fileBaseName);
+                    // }
+                });
+            // let successful = true;
+            // for (let i = 0; i < selectedFilesCount; i++) {
+            //     await fileUpload(selectedFiles[i], userID, fileBaseName)
+            //         .then((r) => {
+            //             if (r) {
+            //                 setFilesCount({...filesCount, [fileBaseName]: earlySelectedFiles + 1});
+            //             }
+            //             // else {
+            //             //     successful = false;
+            //             // }
+            //         });
+            // }
 
-            setFilesCount({...filesCount, [fileBaseName]: earlySelectedFiles + selectedFilesCount});
+            // if (successful) {
+            //     setFilesCount({...filesCount, [fileBaseName]: earlySelectedFiles + selectedFilesCount});
+            // }
         } else {
             setAlertType('info');
             setAlertMessage(`Максимальное кол-во прикрепляемых файлов: ${maxFilesCount}.`);
