@@ -46,9 +46,9 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
         } else {
             setLoginDisabled(true);
         }
-    }, [emailValidated, passwordValidated, isCredentialsIncorrect]);
+    }, [email, password]);
 
-    // Проверка токена подтвержения почты и флага успешной регистрации из url query
+    // Проверка токена подтверждения почты и флага успешной регистрации из url query
     useEffect(() => {
         const token = searchParams.get("verification_email_token");
         const registered = searchParams.get("registered");
@@ -63,6 +63,7 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
                         setOpenAlert(true);
                         break;
                     case 400:
+                        break;
                     case 404:
                         break;
                     default:
@@ -97,7 +98,6 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
         }
         else {
             setEmailValidated(true);
-            setEmailHelpText(" ");
         }
     };
 
@@ -112,7 +112,6 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
             setPasswordHelpText("Пароль должен содержать от 10 символов.");
         } else {
             setPasswordValidated(true);
-            setPasswordHelpText(" ");
         }
     };
 
@@ -169,7 +168,7 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
         navigate("/registration")
     }
 
-    // Обработчик кнопки повторной отправки подтвержения почты
+    // Обработчик кнопки повторной отправки подтверждения почты
     const onSendEmailClick = e => {
         e.preventDefault();
         setOpenAlertLoginPage(false);
@@ -180,7 +179,7 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
                 switch (response.status) {
                     case 200:
                         setAlertType('success');
-                        setAlertMessage("Повторная ссылка для подтвержения отправлена.");
+                        setAlertMessage("Повторная ссылка для подтверждения отправлена.");
                         setOpenAlert(true);
                         break;
                     case 400:
@@ -260,7 +259,7 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
                 style={styles.textFieldStyle}
                 error={!emailValidated || isCredentialsIncorrect}
                 onChange={handleEmailChanged}
-                helperText={emailHelpText}
+                helperText={emailValidated?" ":emailHelpText}
                 fullWidth
                 required
                 variant="standard"
@@ -285,7 +284,7 @@ const LoginPage = ({ setUser, setOpenAlert, setAlertType, setAlertMessage }) => 
                         </InputAdornment>
                     }
                 />
-                <FormHelperText id="login-password-text-field">{passwordHelpText}</FormHelperText>
+                <FormHelperText id="login-password-text-field">{passwordValidated?" ":passwordHelpText}</FormHelperText>
             </FormControl>
 
             <Button

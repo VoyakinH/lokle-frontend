@@ -34,7 +34,6 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
 
     const [passwordCheck, setPasswordCheck] = useState("");
     const [passwordCheckValidated, setPasswordCheckValidated] = useState(true);
-    const [passwordCheckHelpText, setPasswordCheckHelpText] = useState(" ");
     const [showPasswordCheck, setShowPasswordCheck] = useState(false);
 
     const [phone, setPhone] = useState("");
@@ -54,8 +53,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
         } else {
             setRegistrationDisabled(true);
         }
-    }, [firstNameValidated, secondNameValidated, lastNameValidated, emailValidated,
-        passwordValidated, passwordCheckValidated, phoneValidated]);
+    }, [firstName, secondName, lastName, email, password, passwordCheck, phone]);
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -77,7 +75,6 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
             setFirstNameHelpText("В начале имени не может быть пробелов.");
         } else {
             setFirstNameValidated(true);
-            setFirstNameHelpText(" ");
         }
     };
 
@@ -99,7 +96,6 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
             setSecondNameHelpText("В начале фамилии не может быть пробелов.");
         } else {
             setSecondNameValidated(true);
-            setSecondNameHelpText(" ");
         }
     };
 
@@ -119,7 +115,6 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
             setLastNameHelpText("В начале отчества не может быть пробелов.");
         } else {
             setLastNameValidated(true);
-            setLastNameHelpText(" ");
         }
     };
 
@@ -138,7 +133,6 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
         }
         else {
             setEmailValidated(true);
-            setEmailHelpText(" ");
         }
     };
 
@@ -156,11 +150,14 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
             setPasswordHelpText("Необходима хотя бы одна заглавная буква.");
         } else {
             setPasswordValidated(true);
-            setPasswordHelpText(" ");
         }
-        if (passwordCheck !== "" && val !== passwordCheck) {
-            setPasswordCheckHelpText("Пароли не совпадают.");
-            setPasswordCheckValidated(false);
+
+        if (passwordCheck !== "") {
+            if (val === passwordCheck) {
+                setPasswordCheckValidated(true);
+            } else {
+                setPasswordCheckValidated(false);
+            }
         }
     };
 
@@ -176,13 +173,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
     const handlePasswordCheckChanged = (e) => {
         const val = e.target.value;
         setPasswordCheck(val);
-        setPasswordCheckValidated(false);
-        if (val !== password ) {
-            setPasswordCheckHelpText("Пароли не совпадают.");
-        } else {
-            setPasswordCheckValidated(true);
-            setPasswordCheckHelpText(" ");
-        }
+        val !== password? setPasswordCheckValidated(false): setPasswordCheckValidated(true);
     };
 
     // Обработчик кнопки показа проверки пароля
@@ -203,13 +194,11 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
             setPhoneHelpText("Неверный формат. Пример: +79151234567");
         } else {
             setPhoneValidated(true);
-            setPhoneHelpText(" ");
         }
     };
 
     // Обработчик регистрации пользователя
     const onRegistrationClick = () => {
-        setRegistrationDisabled(true);
         setIsLoading(true);
         postRequestHandler('/api/v1/user/parent',
             {first_name: firstName,
@@ -229,6 +218,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
                     setOpenAlert(true);
                     break;
                 case 409:
+                    setRegistrationDisabled(true);
                     setEmailValidated(false);
                     setEmailHelpText("Введённая почта уже занята.");
                     setAlertType("info");
@@ -241,7 +231,6 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
                     setOpenAlert(true);
             }
             setIsLoading(false);
-            setRegistrationDisabled(false);
         })
     }
 
@@ -307,7 +296,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
                 required
                 onChange={handleFirstNameChanged}
                 error={!firstNameValidated}
-                helperText={firstNameHelpText}
+                helperText={firstNameValidated?" ":firstNameHelpText}
             />
             <TextField
                 style={styles.textFieldStyle}
@@ -317,7 +306,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
                 required
                 onChange={handleSecondNameChanged}
                 error={!secondNameValidated}
-                helperText={secondNameHelpText}
+                helperText={secondNameValidated?" ":secondNameHelpText}
             />
             <TextField
                 style={styles.textFieldStyle}
@@ -326,7 +315,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
                 fullWidth
                 onChange={handleLastNameChanged}
                 error={!lastNameValidated}
-                helperText={lastNameHelpText}
+                helperText={lastNameValidated?" ":lastNameHelpText}
             />
             <TextField
                 style={styles.textFieldStyle}
@@ -337,7 +326,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
                 required
                 onChange={handleEmailChanged}
                 error={!emailValidated}
-                helperText={emailHelpText}
+                helperText={emailValidated?" ":emailHelpText}
             />
             <FormControl fullWidth required error={!passwordValidated} variant="standard">
                 <InputLabel htmlFor="register-password-text-field">Пароль</InputLabel>
@@ -357,7 +346,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
                         </InputAdornment>
                     }
                 />
-                <FormHelperText id="register-password-text-field">{passwordHelpText}</FormHelperText>
+                <FormHelperText id="register-password-text-field">{passwordValidated?" ":passwordHelpText}</FormHelperText>
             </FormControl>
             <FormControl fullWidth required error={!passwordCheckValidated} variant="standard">
                 <InputLabel htmlFor="register-password-check-text-field">Повтор пароля</InputLabel>
@@ -377,7 +366,7 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
                         </InputAdornment>
                     }
                 />
-                <FormHelperText id="register-password-check-text-field">{passwordCheckHelpText}</FormHelperText>
+                <FormHelperText id="register-password-check-text-field">{passwordCheckValidated?" ":"Пароли не совпадают."}</FormHelperText>
             </FormControl>
             <TextField
                 style={styles.textFieldStyle}
@@ -387,16 +376,16 @@ const RegistrationPage = ({ setOpenAlert, setAlertType, setAlertMessage }) => {
                 required
                 onChange={handlePhoneChanged}
                 error={!phoneValidated}
-                helperText={phoneHelpText}
+                helperText={phoneValidated?" ":phoneHelpText}
             />
 
             <Button
                 style={styles.buttonRegistrationStyle}
                 fullWidth
                 onClick={onRegistrationClick}
-                disabled={registrationDisabled}
-                color='primary'
-                variant='contained'
+                disabled={registrationDisabled || isLoading}
+                color={'primary'}
+                variant={'contained'}
             >
                 {isLoading?
                     <div> <PulseLoader speedMultiplier={2} color={"#ffffff"} size={7} /></div>:

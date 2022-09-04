@@ -9,9 +9,21 @@ import {
     DialogTitle,
     DialogContent,
     TextField,
-    FormControl, InputLabel, Input, InputAdornment, IconButton, FormHelperText, DialogActions, Dialog, Grid
+    FormControl,
+    InputLabel,
+    Input,
+    InputAdornment,
+    IconButton,
+    FormHelperText,
+    DialogActions,
+    Dialog,
+    Grid,
+    Stack,
+    Divider
 } from '@mui/material';
 import {Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Box} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import {Logout, AccountCircle, VisibilityOff, Visibility} from '@mui/icons-material';
 import {TabContext, TabList, TabPanel} from '@mui/lab';
 import {useNavigate} from "react-router-dom";
@@ -28,7 +40,8 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { StaticDatePicker } from '@mui/x-date-pickers/StaticDatePicker';
-import ruLocale from 'dayjs/locale/ru';
+import 'dayjs/locale/ru';
+import dayjs from 'dayjs';
 
 const styles = {
     paperPassportParent: {
@@ -85,13 +98,14 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
 
     // Данные родителя
     const [parent, setParent] = useState(ParentDefault);
+    const [parentNeedUpdate, setParentNeedUpdate] = useState(true);
     // Заявка на прикрепление паспорта родителя
     const [parentPassportRequest, setParentPassportRequest] = useState({});
 
     // Список детей родителя
     const [children, setChildren] = useState(null);
-    const [childrenUpdateCounter, setChildrenUpdateCounter] = useState(0);
-    const [isChildrenListLoading, setIsChildrenListLoading] = useState(true);
+    const [childrenNeedUpdate, setChildrenNeedUpdate] = useState(true);
+    const [childrenIsLoading, setChildrenIsLoading] = useState(true);
 
     // Диалоговое окно
     const [openDialog, setOpenDialog] = useState(false);
@@ -103,49 +117,6 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
     const [selectedFiles, setSelectedFiles] = useState("");
     // Кол-во прикреплённых документов
     const [filesCount, setFilesCount] = useState({});
-
-    // Виджет информации о паспорте родителя
-    // Данные паспорта родителя
-    const [parentPassport, setParentPassport] = useState("");
-    const [parentPassportValidated, setParentPassportValidated] = useState(true);
-    const [parentPassportHelpText, setParentPassportHelpText] = useState("");
-
-    // Первая стадия регистрации ребёнка
-    const [firstName, setFirstName] = useState("");
-    const [firstNameValidated, setFirstNameValidated] = useState(true);
-    const [firstNameHelpText, setFirstNameHelpText] = useState("");
-
-    const [secondName, setSecondName] = useState("");
-    const [secondNameValidated, setSecondNameValidated] = useState(true);
-    const [secondNameHelpText, setSecondNameHelpText] = useState("");
-
-    const [lastName, setLastName] = useState("");
-    const [lastNameValidated, setLastNameValidated] = useState(true);
-    const [lastNameHelpText, setLastNameHelpText] = useState("");
-
-    const [email, setEmail] = useState("");
-    const [emailValidated, setEmailValidated] = useState(true);
-    const [emailHelpText, setEmailHelpText] = useState("");
-
-    const [phone, setPhone] = useState("");
-    const [phoneValidated, setPhoneValidated] = useState(true);
-    const [phoneHelpText, setPhoneHelpText] = useState("");
-
-    // Разрешена ли отправка запроса на первичную регистрацию первой стадии ребёнка.
-    const [registrationDisabled, setRegistrationDisabled] = useState(true);
-
-    // Проверка возможности регистрации
-    // useEffect(() => {
-    //     if (firstNameValidated && secondNameValidated && lastNameValidated &&
-    //         emailValidated && passwordValidated && passwordCheckValidated && phoneValidated &&
-    //         firstName !== "" && secondName !== "" && email !== "" && password !== "" &&
-    //         passwordCheck !== "" && phone !== "") {
-    //         setRegistrationDisabled(false);
-    //     } else {
-    //         setRegistrationDisabled(true);
-    //     }
-    // }, [firstNameValidated, secondNameValidated, lastNameValidated, emailValidated,
-    //     passwordValidated, passwordCheckValidated, phoneValidated]);
 
 
     // useEffect(() => {
@@ -184,22 +155,22 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
     //     });
     // }, [])
 
-    // Получение данных родителя при загрузке страницы
+    // Получение данных родителя
     useEffect(() => {
         getRequestHandler('/api/v1/user/parent').then(response => {
-            // @ts-ignore
             switch (response.status) {
-                case 401:
-                    logout();
-                    break;
                 case 200:
                     setParent(response.data);
+                    break;
+                case 401:
+                    console.log("/user/parent 401")
+                    logout();
                     break;
                 default:
                     showBackendFailAlert();
             }
         });
-    }, [])
+    }, [parentNeedUpdate])
 
     // Получение информации о заявке на прикрепление паспорта если родитель уже его прикреплял
     useEffect(() => {
@@ -217,7 +188,6 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                         console.log("/reg/request/parent/list 404")
                         break;
                     default:
-                        console.log("/reg/request/parent/list 500");
                         showBackendFailAlert();
 
                 }
@@ -227,23 +197,22 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
 
     // Получение списка детей родителя при изменении childrenUpdateCounter
     useEffect(() => {
-        setIsChildrenListLoading(true);
+        setChildrenIsLoading(true);
         getRequestHandler('/api/v1/user/parent/children').then(response => {
-            if (!response)
-                return;
             switch (response.status) {
                 case 200:
                     setChildren(response.data);
                     break;
                 case 401:
+                    console.log("/user/parent/children 401");
                     logout();
                     break;
                 default:
                     showBackendFailAlert();
             }
         });
-        setIsChildrenListLoading(false);
-    }, [childrenUpdateCounter])
+        setChildrenIsLoading(false);
+    }, [childrenNeedUpdate])
 
     // Функция логаута
     const logout = () => {
@@ -293,36 +262,29 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
             })
             .then(response => {
                 switch (response.status) {
-                    // case 400:
-                    //     console.log("/api/v1/file/upload 400 Поле для ввода паспорта пустое или неправильная структура запроса.");
-                    //     setAlertType('error');
-                    //     setAlertMessage("Поле для ввода паспорта пустое.");
-                    //     setOpenAlert(true);
-                    //     return;
                     case 200:
-                        console.log("/api/v1/file/delete 200.");
+                        console.log("/file/delete 200.");
                         successful = true;
                         break;
                     case 400:
-                        console.log("/api/v1/file/delete 400.");
+                        console.log("/file/delete 400.");
                         successful = true;
                         break;
                     case 401:
-                        console.log("/api/v1/file/delete 401.");
+                        console.log("/file/delete 401.");
                         logout();
                         break;
                     case 403:
                         // ?????
-                        console.log("/api/v1/file/delete 403.");
+                        console.log("/file/delete 403.");
                         showBackendFailAlert();
                         break;
                     case 404:
                         // ?????
-                        console.log("/api/v1/file/delete 404.");
+                        console.log("/file/delete 404.");
                         showBackendFailAlert();
                         break;
                     default:
-                        console.log("/api/v1/file/delete 500");
                         showBackendFailAlert();
                 }
             })
@@ -344,19 +306,18 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
             .then(response => {
                 switch (response.status) {
                     case 200:
-                        console.log("/api/v1/file/upload 200.");
+                        console.log("/file/upload 200.");
                         setFilesCount({...filesCount, [fileBaseName]: ++filesCount[fileBaseName]});
                         break;
                     case 401:
-                        console.log("/api/v1/file/upload 401.");
+                        console.log("/file/upload 401.");
                         logout();
                         break;
                     case 400:
-                        console.log("/api/v1/file/upload 400.");
+                        console.log("/file/upload 400.");
                         showBackendFailAlert()
                         break;
                     default:
-                        console.log(`/api/v1/file/upload 500 (backend error: (${response.body}).`);
                         showBackendFailAlert()
                 }
             })
@@ -394,32 +355,7 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                     if (filesCount[fileBaseName] - earlySelectedFiles !== selectedFilesCount) {
                         filesDelete(userID, fileBaseName).then(() => {});
                     }
-                    // if (!r) {
-                    //     filesDelete(userID, fileBaseName);
-                    // }
-                    // if (r) {
-                    //     setFilesCount({...filesCount, [fileBaseName]: earlySelectedFiles + selectedFilesCount});
-                    // }
-                    // else {
-                    //     filesDelete(userID, fileBaseName);
-                    // }
                 });
-            // let successful = true;
-            // for (let i = 0; i < selectedFilesCount; i++) {
-            //     await fileUpload(selectedFiles[i], userID, fileBaseName)
-            //         .then((r) => {
-            //             if (r) {
-            //                 setFilesCount({...filesCount, [fileBaseName]: earlySelectedFiles + 1});
-            //             }
-            //             // else {
-            //             //     successful = false;
-            //             // }
-            //         });
-            // }
-
-            // if (successful) {
-            //     setFilesCount({...filesCount, [fileBaseName]: earlySelectedFiles + selectedFilesCount});
-            // }
         } else {
             setAlertType('info');
             setAlertMessage(`Максимальное кол-во прикрепляемых файлов: ${maxFilesCount}.`);
@@ -486,8 +422,6 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
 
     }
 
-    const [parentPassportFilesFromServer, setParentPassportFilesFromServer] = useState([]);
-
     // Обработчик нажатия на кнопку первого добавления паспорта родителя
     const openAddParentPassportDialog = () => {
         filesDelete(user.id, "passport")
@@ -495,7 +429,6 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 if (r) {
                     setParentPassport("");
                     setParentPassportValidated(true);
-                    setParentPassportHelpText("");
 
                     setDialogTitle("Добавление паспорта родителя");
                     setDialogContentType("parentPassportFirstAdd");
@@ -503,6 +436,12 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 }
             });
     };
+
+    // Виджет информации о паспорте родителя
+    // Данные паспорта родителя
+    const [parentPassport, setParentPassport] = useState("");
+    const [parentPassportValidated, setParentPassportValidated] = useState(true);
+    const [parentPassportHelpText, setParentPassportHelpText] = useState("");
 
     // Обработчик изменения серии номера паспорта родителя
     const handleParentPassportChanged = (e) => {
@@ -518,6 +457,62 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
         }
     };
 
+    const FileAddComponent = (userID, fileBaseName, maxFilesCount, maxFileSize) => {
+        return (
+            <Stack
+                direction="row"
+                divider={<Divider orientation="vertical" flexItem />}
+                justifyContent="space-around"
+                alignItems="center"
+            >
+                <IconButton
+                    sx={{
+                        borderRadius: 2,
+                        backgroundColor: 'rgba(50, 200, 70, 0.3)'
+                    }}
+                    color='success'
+                    component="label"
+                >
+                    <input
+                        hidden
+                        accept=".png, .jpeg, .jpg, .pdf"
+                        multiple
+                        type="file"
+                        onChange={(event) => {
+                            filesSelectedHandler(event, userID, fileBaseName, maxFilesCount, maxFileSize);
+                        }}
+                    />
+                    <AddIcon fontSize="inherit" />
+                </IconButton>
+
+                <Stack
+                    direction="column"
+                    alignItems="center"
+                >
+                    <Typography variant="caption">
+                        ПРИКРЕПЛЕНО
+                    </Typography>
+                    <Typography variant="button">
+                        {filesCount[fileBaseName]}
+                    </Typography>
+                </Stack>
+
+                <IconButton
+                    sx={{
+                        borderRadius: 2,
+                        backgroundColor: 'rgba(255, 20, 20, 0.3)'
+                    }}
+                    color='error'
+                    onClick={() => {
+                        filesDelete(user.id, fileBaseName);
+                    }}
+                >
+                    <DeleteIcon fontSize="inherit" />
+                </IconButton>
+            </Stack>
+        )
+    }
+
     // Содержимое диалогового окна для первого прикрепления паспорта родителя
     const ParentPassportFirstAddDialogContent = (
         <div>
@@ -529,36 +524,54 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 required
                 onChange={handleParentPassportChanged}
                 error={!parentPassportValidated}
-                helperText={parentPassportHelpText}
+                helperText={parentPassportValidated? " ": parentPassportHelpText}
             />
 
-            <Button variant="contained" component="label">
-                Добавить документ или фото
-                <input
-                    hidden
-                    accept=".png, .jpeg, .jpg, .pdf"
-                    multiple
-                    type="file"
-                    onChange={(event) => {
-                        filesSelectedHandler(event, user.id, "passport", 3, 5);
-                    }}
-                />
-            </Button>
-
-            <h5>Прикреплено файлов: {filesCount["passport"]}</h5>
-
-            <Button
-                color="inherit"
-                onClick={() => {
-                    filesDelete(user.id, "passport");
-                }}
-            >
-                Удалить прикреплённые фото
-            </Button>
+            {FileAddComponent(user.id, "passport", 3, 5)}
         </div>
     );
 
-    // Обработчик открытия диалоговоего окна регистрации менеджеров
+    // Хендлер нажатия на кнопку отправки паспорта родителя на проверку при первом заполнении паспорта
+    const onSendParentPassportFirstTime = () => {
+        postRequestHandler('/api/v1/reg/request/parent/passport',
+            {
+                passport: parentPassport,
+            })
+            .then(response => {
+                switch (response.status) {
+                    case 200:
+                        setOpenDialog(false);
+                        setParentNeedUpdate(!parentNeedUpdate);
+                        break;
+                    case 401:
+                        console.log("/reg/request/parent/passport 401");
+                        break;
+                    case 400:
+                        console.log("/reg/request/parent/passport 400");
+                        logout();
+                        break;
+                    case 409:
+                        console.log("/reg/request/parent/passport 409");
+                        showBackendFailAlert();
+                        break;
+                    default:
+                        showBackendFailAlert();
+                }
+            });
+    };
+
+    // Кнопка отправки на диалоговом окне
+    const ParentPassportFirstAddDialogSubmitButton = (
+        <Button
+            color={'success'}
+            onClick={onSendParentPassportFirstTime}
+            disabled={parentPassport==="" || !parentPassportValidated || filesCount["passport"] === 0}
+        >
+            Отправить
+        </Button>
+    );
+
+    // Обработчик открытия диалогового окна регистрации менеджеров
     const openAddChildDialog = () => {
         setDialogTitle("Первичная регистрация ученика");
         setDialogContentType("childFirstStageFirstAdd");
@@ -573,30 +586,123 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
 
 
     const [childFirstName, setChildFirstName] = useState("");
+    const [childFirstNameValidated, setChildFirstNameValidated] = useState(true);
+    const [childFirstNameHelpText, setChildFirstNameHelpText] = useState("");
+
     const [childSecondName, setChildSecondName] = useState("");
+    const [childSecondNameValidated, setChildSecondNameValidated] = useState(true);
+    const [childSecondNameHelpText, setChildSecondNameHelpText] = useState("");
+
     const [childLastName, setChildLastName] = useState("");
+    const [childLastNameValidated, setChildLastNameValidated] = useState(true);
+    const [childLastNameHelpText, setChildLastNameHelpText] = useState("");
+
     const [childEmail, setChildEmail] = useState("");
+    const [childEmailValidated, setChildEmailValidated] = useState(true);
+    const [childEmailHelpText, setChildEmailHelpText] = useState("");
+
     const [childPhone, setChildPhone] = useState("");
+    const [childPhoneValidated, setChildPhoneValidated] = useState(true);
+    const [childPhoneHelpText, setChildPhoneHelpText] = useState("");
 
-    const [value, setValue] = React.useState(null);
+    const [childBirthDate, setChildBirthDate] = useState(null);
+    const [childBirthDateValidated, setChildBirthDateValidated] = useState(true);
+    const [childBirthDateHelpText, setChildBirthDateHelpText] = useState("");
 
-    // {
-    //     "child": {
-    //         "first_name": "testik",
-    //         "second_name": "Ребенков2",
-    //         "last_name": "Ребенкович2",
-    //         "email": "testik@mail.ru",
-    //         "phone": "+79227244788",
-    //         "birth_date": 1121889600
-    // },
-    //     "is_student": false
-    // }
+    const handleChildFirstNameChanged = (e) => {
+        const val = e.target.value;
+        const len = val.length;
+        setChildFirstName(val);
+        setChildFirstNameValidated(false);
+        if (len < 1) {
+            setChildFirstNameHelpText("Укажите имя.");
+        } else if (len > 32) {
+            setChildFirstNameHelpText("Имя не может превышать 32 символа.");
+        } else if (/\d/.test(val)) {
+            setChildFirstNameHelpText("Имя не может содержать цифры.");
+        } else if (val[len - 1] === ' ') {
+            setChildFirstNameHelpText("В конце имени не может быть пробелов.");
+        } else if (val[0] === ' ') {
+            setChildFirstNameHelpText("В начале имени не может быть пробелов.");
+        } else {
+            setChildFirstNameValidated(true);
+        }
+    };
+
+    const handleChildSecondNameChanged = (e) => {
+        const val = e.target.value;
+        const len = val.length;
+        setChildSecondName(val);
+        setChildSecondNameValidated(false);
+        if (len < 1) {
+            setChildSecondNameHelpText("Укажите фамилию.");
+        } else if (len > 32) {
+            setChildSecondNameHelpText("Фамилия не может превышать 32 символа.");
+        } else if (/\d/.test(val)) {
+            setChildSecondNameHelpText("Фамилия не может содержать цифры.");
+        } else if (val[len - 1] === ' ') {
+            setChildSecondNameHelpText("В конце фамилии не может быть пробелов.");
+        } else if (val[0] === ' ') {
+            setChildSecondNameHelpText("В начале фамилии не может быть пробелов.");
+        } else {
+            setChildSecondNameValidated(true);
+        }
+    };
+
+    const handleChildLastNameChanged = (e) => {
+        const val = e.target.value;
+        const len = val.length;
+        setChildLastName(val);
+        setChildLastNameValidated(false);
+        if (len > 32) {
+            setChildLastNameHelpText("Отчество не может превышать 32 символа.");
+        } else if (/\d/.test(val)) {
+            setChildLastNameHelpText("Отчество не может содержать цифры.");
+        } else if (val[len - 1] === ' ') {
+            setChildLastNameHelpText("В конце отчества не может быть пробелов.");
+        } else if (val[0] === ' ') {
+            setChildLastNameHelpText("В начале отчества не может быть пробелов.");
+        } else {
+            setChildLastNameValidated(true);
+        }
+    };
+
+    const handleChildEmailChanged = (e) => {
+        const val = e.target.value;
+        const len = val.length;
+        setChildEmail(val);
+        setChildEmailValidated(false);
+        if (val[len - 1] === ' ') {
+            setChildEmailHelpText("В конце почты не может быть пробелов.");
+        } else if (val[0] === ' ') {
+            setChildEmailHelpText("В начале почты не может быть пробелов.");
+        } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val)) {
+            setChildEmailHelpText("Электронная почта некорректна.");
+        }
+        else {
+            setChildEmailValidated(true);
+        }
+    };
+
+    const handleChildPhoneChanged = (e) => {
+        const val = e.target.value.replace(/\D/g,"");
+        const len = val.length;
+        setChildPhone(val);
+        setChildPhoneValidated(true);
+        if (len !==0 && (len < 10 || len > 16)) {
+            setChildPhoneHelpText("Неверный формат. Пример: 79151234567");
+            setChildPhoneValidated(false);
+        }
+    };
 
     // Содержимое диалогового окна для первичного выполнения первой стадии регистрации ученика
     const ChildFirstStageFirstAddDialogContent = (
         <div>
 
-            {parent.passport_verified?<div></div>:<div>Для регистрации ребёнка, который ещё не учился в нашей школе необходимо подтвердить Ваш паспорт. Для этого следуйте инструкциям на главном экране личного кабинета.</div>}
+            {!parent.passport_verified &&
+            <Typography variant="subtitle1">
+                Для регистрации ребёнка, который ещё не учился в нашей школе необходимо подтвердить Ваш паспорт. Для этого следуйте инструкциям на главном экране личного кабинета.
+            </Typography>}
 
             <FormGroup>
                 <FormControlLabel
@@ -612,123 +718,120 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
             </FormGroup>
 
             <TextField
-                style={styles.textFieldStyle}
                 variant="standard"
                 label='Имя'
                 fullWidth
-                // disabled={parent.passport_verified}
-                // required
-                onChange={e => {setChildFirstName(e.target.value)}}
-                // error={!firstNameValidated}
-                // helperText={firstNameHelpText}
+                required
+                value={childFirstName}
+                onChange={handleChildFirstNameChanged}
+                error={!childFirstNameValidated}
+                helperText={childFirstNameValidated?" ":childFirstNameHelpText}
             />
             <TextField
-                style={styles.textFieldStyle}
                 variant="standard"
                 label='Фамилия'
                 fullWidth
-                // required
-                onChange={e => {setChildSecondName(e.target.value)}}
-                // error={!secondNameValidated}
-                // helperText={secondNameHelpText}
+                required
+                value={childSecondName}
+                onChange={handleChildSecondNameChanged}
+                error={!childSecondNameValidated}
+                helperText={childSecondNameValidated?" ":childSecondNameHelpText}
             />
             <TextField
-                style={styles.textFieldStyle}
                 variant="standard"
                 label='Отчество'
                 fullWidth
-                onChange={e => {setChildLastName(e.target.value)}}
-                // error={!lastNameValidated}
-                // helperText={lastNameHelpText}
+                value={childLastName}
+                onChange={handleChildLastNameChanged}
+                error={!childLastNameValidated}
+                helperText={childLastNameValidated?" ":childLastNameHelpText}
             />
             <TextField
-                style={styles.textFieldStyle}
                 variant="standard"
                 type='email'
                 label='Электронная почта'
                 fullWidth
-                // required
-                onChange={e => {setChildEmail(e.target.value)}}
-                // error={!emailValidated}
-                // // helperText={emailHelpText}
+                required
+                value={childEmail}
+                onChange={handleChildEmailChanged}
+                error={!childEmailValidated}
+                helperText={childEmailValidated?" ":childEmailHelpText}
             />
             <TextField
-                style={styles.textFieldStyle}
+                sx={{marginBottom:'10px'}}
                 variant="standard"
                 label='Номер телефона'
                 fullWidth
-                // required
-                onChange={e => {setChildPhone(e.target.value)}}
-                // error={!phoneValidated}
-                // helperText={phoneHelpText}
+                value={childPhone}
+                onChange={handleChildPhoneChanged}
+                error={!childPhoneValidated}
+                helperText={childPhoneValidated?" ":childPhoneHelpText}
             />
 
-            {/*<Button variant="contained" component="label">*/}
-            {/*    Upload*/}
-            {/*    <input*/}
-            {/*        hidden*/}
-            {/*        accept=".png, .jpeg, .jpg, .pdf"*/}
-            {/*        multiple*/}
-            {/*        type="file"*/}
-            {/*        onChange={(event) => {filesSelectedHandler(event, user.id, "passport", 3, 5)}}*/}
-            {/*    />*/}
-            {/*</Button>*/}
-
-            {/*<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={ruLocale}>*/}
-            {/*    <DatePicker*/}
-            {/*        label="Basic example"*/}
-            {/*        value={value}*/}
-            {/*        onChange={(newValue) => {*/}
-            {/*            console.log(newValue);*/}
-            {/*            setValue(newValue);*/}
-            {/*        }}*/}
-            {/*        renderInput={(params) => <TextField {...params} />}*/}
-            {/*    />*/}
-            {/*</LocalizationProvider>*/}
-            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={ruLocale}>
+            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={'ru'}>
                 <DatePicker
                     disableFuture
                     label="Дата рождения"
                     openTo="year"
                     views={['year', 'month', 'day']}
-                    // dayOfWeekFormatter={(day) => `${day}.`}
-                    value={value}
-                    onChange={(newValue) => {
-                        console.log(Date.parse(newValue.$d?newValue.$d:""));
-                        setValue(newValue);
+                    value={childBirthDate}
+                    onChange={(val) => {
+                        setChildBirthDate(val);
                     }}
                     renderInput={(params) => <TextField {...params} />}
                 />
             </LocalizationProvider>
         </div>
     );
-    // Обработчик закрытия диалогового окна
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
-    };
 
-    // Хендлер нажатия на кнопку отправки паспорта родителя на проверку при первом заполнении паспорта
-    const onSendParentPassportFirstTime = () => {
-        postRequestHandler('/api/v1/reg/request/parent/passport',
+    // Хендлер нажатия на кнопку отправки данных ребёнка на проверку при первом заполнении данных ребёнка
+    const onSendChildSignUpFirstStageFirstTime = () => {
+        postRequestHandler('/api/v1/reg/request/child/stage/first',
             {
-                passport: parentPassport,
+                child: {
+                    first_name: childFirstName,
+                    second_name: childSecondName,
+                    last_name: childLastName,
+                    email: childEmail,
+                    phone: childPhone,
+                    birth_date: Date.parse(childBirthDate? childBirthDate.$d: "") / 1000
+                },
+                is_student: childAlreadyInSchool
             })
             .then(response => {
-
                 switch (response.status) {
                     case 200:
                         setOpenDialog(false);
-                        break;
-                    case 401:
-                        console.log("/reg/request/parent/passport Не авторизован.");
+                        setChildFirstName("");
+                        setChildSecondName("");
+                        setChildLastName("");
+                        setChildEmail("");
+                        setChildPhone("");
+                        setChildBirthDate(null);
+                        setChildAlreadyInSchool(true);
+
+                        setChildrenNeedUpdate(!childrenNeedUpdate);
+                        setAlertType("success");
+                        setAlertMessage("Заявка на регистрацию ребёнка отправлена.");
+                        setOpenAlert(true);
                         break;
                     case 400:
-                        console.log("/reg/request/parent/passport Что-то не так со структурой запроса или поле паспорта пустое.");
+                        console.log("/reg/request/child/stage/first 400");
+                        setAlertType('info');
+                        setAlertMessage("Для добавления ученика, который ещё не учился в нашей школе, необходимо подтвердить Ваш паспорт.");
+                        setOpenAlert(true);
                         break;
+                    case 401:
+                        console.log("/reg/request/child/stage/first 401");
                         logout();
+                        break;
                     case 409:
-                        console.log("/reg/request/parent/passport Данные отправлены повторно.");
-                        showBackendFailAlert();
+                        console.log("/reg/request/child/stage/first 409");
+                        setChildEmailValidated(false);
+                        setChildEmailHelpText("Введённая почта уже занята.");
+                        setAlertType("info");
+                        setAlertMessage("Введённая почта уже занята.");
+                        setOpenAlert(true);
                         break;
                     default:
                         showBackendFailAlert();
@@ -736,43 +839,53 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
             });
     };
 
-    // Рендер карточек менеджеров
+    // Кнопка отправки на диалоговом окне
+    const ChildFirstStageFirstAddDialogSubmitButton = (
+        <Button
+            color={'success'}
+            onClick={onSendChildSignUpFirstStageFirstTime}
+            disabled={!childFirstNameValidated || !childSecondNameValidated || !childLastNameValidated ||
+                !childEmailValidated || !childPhoneValidated || childFirstName==="" || childSecondName===""
+                || childEmail==="" || childBirthDate === null || isNaN(childBirthDate.$y)}
+        >
+            Отправить
+        </Button>
+    );
+
+    // Обработчик закрытия диалогового окна
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+    };
+
+    // Рендер карточек детей
     const ChildrenCards = () => {
-        return (managersList && managersList.map((manager) => (
-            <Grid item key={`managerGrid${manager.id}`}>
-                <Paper elevation={6} style={styles.paperManager}>
+        return (children && children.map((childItem) => (
+            <Grid item key={`childGrid${childItem.child.id}`}>
+                <Paper elevation={6} style={styles.paperChild}>
                     <Typography sx={{fontSize: 14}} color="text.secondary">
                         ФИО
                     </Typography>
                     <Typography variant="h6" component="div">
-                        {manager.second_name !== "" ? manager.second_name : "Не указана"} <br/>
-                        {manager.first_name !== "" ? manager.first_name : "Не указано"} <br/>
-                        {manager.last_name !== "" ? manager.last_name : "Не указано"}
+                        {childItem.child.second_name !== "" ? childItem.child.second_name : "Не указана"} <br/>
+                        {childItem.child.first_name !== "" ? childItem.child.first_name : "Не указано"} <br/>
+                        {childItem.child.last_name !== "" ? childItem.child.last_name : "Не указано"}
                     </Typography>
-                    <Typography sx={{fontSize: 14}} color="text.secondary">
-                        Номер телефона
-                    </Typography>
-                    <Typography variant="h6" component="div">
-                        {manager.phone !== "" ? manager.phone : "Не указан"}
-                    </Typography>
+                    {/*<Typography sx={{fontSize: 14}} color="text.secondary">*/}
+                    {/*    Номер телефона*/}
+                    {/*</Typography>*/}
+                    {/*<Typography variant="h6" component="div">*/}
+                    {/*    {manager.phone !== "" ? manager.phone : "Не указан"}*/}
+                    {/*</Typography>*/}
                     <Typography sx={{fontSize: 14}} color="text.secondary">
                         Электронная почта
                     </Typography>
                     <Typography variant="h6" component="div">
-                        {manager.email}
+                        {childItem.child.email}
                     </Typography>
                 </Paper>
             </Grid>
         )))
     };
-
-    // Список менеджеров
-    const [managersList, setManagersList] = useState(null);
-    const [managersListUpdateCounter, setManagersListUpdateCounter] = useState(0);
-    const [isManagersListLoading, setIsManagersListLoading] = useState(false);
-
-    // Диалоговое окно регистрации менеджера
-    const [openAddManagerDialog, setOpenAddManagerDialog] = useState(false);
 
     return (
         <Box>
@@ -806,7 +919,7 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 {/*Кабинет родителя карточки добавить ученика стандартная карточка*/}
                 <Grid item key={`childGridBase`}>
                     <Paper elevation={6} style={styles.paperChildBase}>
-                        {isChildrenListLoading ?
+                        {childrenIsLoading ?
                             <PulseLoader speedMultiplier={2} color={blue[500]} size={10}/> :
                             <Button
                                 onClick={openAddChildDialog}
@@ -822,20 +935,15 @@ const LkParent = ({user, setUser, setOpenAlert, setAlertType, setAlertMessage}) 
                 <DialogTitle>{dialogTitle}</DialogTitle>
 
                 <DialogContent>
-                    {/*Родитель паспорт этапы отправить диалог контент вызов*/}
                     {dialogContentType === "parentPassportFirstAdd" && ParentPassportFirstAddDialogContent}
                     {dialogContentType === "childFirstStageFirstAdd" && ChildFirstStageFirstAddDialogContent}
 
                 </DialogContent>
 
                 <DialogActions>
-                    {/*Родитель паспорт этапы отправить диалог действия вызов*/}
-                    {
-                        dialogContentType === "parentPassportFirstAdd" ?
-                            <Button color={'success'} onClick={onSendParentPassportFirstTime}>Отправить</Button> :
-                            <div></div>
-                    }
-                    {/*<Button color={'success'} onClick={handleCloseDialog}>Отправить</Button>*/}
+                    {dialogContentType === "parentPassportFirstAdd" && ParentPassportFirstAddDialogSubmitButton}
+                    {dialogContentType === "childFirstStageFirstAdd" && ChildFirstStageFirstAddDialogSubmitButton}
+
                     <Button color={'error'} onClick={handleCloseDialog}>Отмена</Button>
                 </DialogActions>
             </Dialog>
