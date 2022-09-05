@@ -14,6 +14,8 @@ import { GlobalLoader } from "./components/LoadingSpinners";
 
 import { UserDefault } from "./components/Structs_default";
 
+import CookieConsent, { Cookies } from "react-cookie-consent";
+
 function App() {
     // Информация о пользователе
     const [user, setUser] = useState(UserDefault);
@@ -112,6 +114,19 @@ function App() {
                             {alertMessage}
                         </Alert>
                     </Snackbar>
+
+                    <CookieConsent
+                        location="bottom"
+                        buttonClasses="btn btn-primary"
+                        containerClasses="alert alert-warning col-lg-12"
+                        contentClasses="text-capitalize"
+                        customButtonProps = {{variant: "contained", style: {marginRight: "5px", borderRadius: 15}}}
+                    >
+                        Работая с сайтом kit.lokle.ru, вы принимаете условия использования файлов cookies.
+                        <br/>Более подробная информация
+                        <a> </a>
+                        <a href="/about/cookie/" style={{ color: '#FFF' }}>здесь</a>
+                    </CookieConsent>
                 </div>
     );
 }
