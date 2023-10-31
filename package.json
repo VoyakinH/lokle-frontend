@@ -3,20 +3,25 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@emotion/react": "^11.9.3",
-    "@emotion/styled": "^11.9.3",
+    "@emotion/react": "^11.10.0",
+    "@emotion/styled": "^11.10.0",
     "@mui/icons-material": "^5.8.4",
-    "@mui/lab": "^5.0.0-alpha.88",
+    "@mui/lab": "^5.0.0-alpha.94",
     "@mui/material": "^5.8.4",
+    "@mui/x-data-grid": "^5.17.1",
+    "@mui/x-date-pickers": "^5.0.0-beta.7",
     "axios": "^0.27.2",
+    "dayjs": "^1.11.5",
     "js-cookie": "^3.0.1",
     "react": "^18.2.0",
+    "react-cookie-consent": "^8.0.1",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.3.0",
-    "react-scripts": "^5.0.1"
+    "react-scripts": "^5.0.1",
+    "react-spinners": "^0.13.3"
   },
   "scripts": {
-    "start": "PORT=80 react-scripts start",
+    "start": "PORT=3000 react-scripts start",
     "build": "PORT=80 react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
